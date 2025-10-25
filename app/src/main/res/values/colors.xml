@@ -7,4 +7,21 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Coffee tones for gradient -->
+    <color name="coffee_light">#6A3A23</color>
+    <color name="coffee_mid">#4E2C1E</color>
+    <color name="coffee_dark">#3B2116</color>
+    <!-- UI accent -->
+    <color name="coffee_accent">#E6B480</color>
+    <!-- Text -->
+    <color name="text_primary_light">#FFFFFF</color>
+    <color name="text_secondary_light">#D3B8A3</color>
+
+    <color name="btn_login_bg">#E6B480</color>   <!-- caramel sáng -->
+    <color name="btn_login_bg_pressed">#D39F63</color>
+
+    <color name="btn_create_bg">#8C5631</color>           <!-- nâu caramel đậm vừa -->
+    <color name="btn_create_bg_pressed">#724326</color>   <!-- tone tối hơn khi nhấn -->
+
 </resources>
