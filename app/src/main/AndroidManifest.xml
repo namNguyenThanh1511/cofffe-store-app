@@ -16,12 +16,31 @@
         <activity
             android:name=".ui.activities.LoginActivity"
             android:exported="true">
+            <!-- Temporarily disabled for testing MenuActivity -->
+            <!--<intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>-->
+        </activity>
+        <activity android:name=".ui.activities.RegisterActivity" />
+        <activity 
+            android:name=".ui.activities.MenuActivity"
+            android:exported="true"
+            android:theme="@style/Theme.CoffeStore.NoActionBar">
+            <!-- TEMPORARY: For testing MenuActivity directly -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activities.RegisterActivity" />
+        <activity 
+            android:name=".ui.activities.ProductDetailActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity 
+            android:name=".ui.activities.CartActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
         <!--    <activity android:name=".ui.activities.MainActivity" />-->
     </application>
 

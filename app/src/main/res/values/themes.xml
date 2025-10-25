@@ -13,4 +13,11 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Theme without ActionBar for MenuActivity -->
+    <style name="Theme.CoffeStore.NoActionBar" parent="Theme.CoffeStore">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/gradient_top</item>
+    </style>
 </resources>

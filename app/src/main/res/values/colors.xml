@@ -7,4 +7,20 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Coffee App Colors -->
+    <color name="brown_primary">#4A3428</color>
+    <color name="brown_dark">#2D1E16</color>
+    <color name="brown_light">#6B4E3D</color>
+    <color name="brown_card">#5C4033</color>
+    <color name="brown_button">#8B6F47</color>
+    <color name="brown_button_selected">#A0826D</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_gray">#B8B8B8</color>
+    <color name="search_bg">#6B4E3D</color>
+    <color name="price_old">#999999</color>
+    
+    <!-- Gradient Colors -->
+    <color name="gradient_top">#5C3D2E</color>
+    <color name="gradient_bottom">#1A0F0A</color>
 </resources>
