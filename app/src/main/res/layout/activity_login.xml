@@ -4,7 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_coffee_gradient"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:fillViewport="true"
+    android:descendantFocusability="afterDescendants"
+    android:focusable="false"
+    android:focusableInTouchMode="false"
+    android:clickable="false">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,9 +22,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sign In"
-            android:textColor="@color/text_primary_light"
+            android:textColor="#E6FFFFFF"
             android:textSize="28sp"
             android:textStyle="bold"
+            android:fontFamily="sans-serif"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp" />
     
@@ -34,35 +40,36 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Email"
-                android:textColor="@color/text_primary_light"
+                android:textColor="#CCFFFFFF"
                 android:textSize="20sp"
                 android:textStyle="normal"
+                android:fontFamily="sans-serif"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enter your email address"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="16sp"
-                android:layout_marginBottom="4dp" />
+            
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
-                android:id="@+id/et_email"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/ernameet_us"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="textEmailAddress"
-                android:textColor="@color/text_primary_light"
+                android:hint="Enter your email address"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
+                android:textColor="#E6FFFFFF"
                 android:textSize="18sp"
+                android:fontFamily="sans-serif"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:textColorHint="@color/text_secondary_light" />
+                android:textColorHint="#80FFFFFF" />
 
         </LinearLayout>
 
@@ -77,9 +84,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Password"
-                android:textColor="@color/text_primary_light"
+                android:textColor="#CCFFFFFF"
                 android:textSize="20sp"
                 android:textStyle="normal"
+                android:fontFamily="sans-serif"
                 android:layout_marginBottom="8dp" />
 
             <View
@@ -87,17 +95,23 @@
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="textPassword"
-                android:textColor="@color/text_primary_light"
+                android:hint="••••••••"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
+                android:textColor="#E6FFFFFF"
                 android:textSize="18sp"
+                android:fontFamily="sans-serif"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:textColorHint="@color/text_secondary_light" />
+                android:textColorHint="#80FFFFFF" />
 
         </LinearLayout>
 
@@ -112,7 +126,10 @@
             android:gravity="center"
             android:text="LOGIN"
             android:textAllCaps="true"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:textColor="#F2FFFFFF"
+            android:fontFamily="sans-serif-medium"
+            app:cornerRadius="16dp" />
 
         <!-- Row: Forgot / Reset -->
         <LinearLayout
@@ -126,8 +143,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Forgot Password?"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="14sp"/>
+                android:textColor="#99FFFFFF"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"/>
 
             <TextView
                 android:id="@+id/tv_reset"
@@ -136,12 +154,13 @@
                 android:text="  Reset Password"
                 android:textStyle="bold"
                 android:textColor="@color/coffee_accent"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"/>
         </LinearLayout>
 
-        <!-- Create account (subtle) -->
+        <!-- Register button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_create_account"
+            android:id="@+id/btn_register"
             android:layout_width="295dp"
             android:layout_height="52dp"
             android:layout_marginTop="16dp"
@@ -151,9 +170,10 @@
             android:paddingTop="0dp"
             android:text="Create an account"
             android:textAllCaps="false"
-            android:textColor="@color/text_primary_light"
+            android:textColor="#E6FFFFFF"
             android:textSize="16sp"
-            app:backgroundTint="@color/coffee_mid"
+            app:backgroundTint="@color/coffee_light"
+            android:fontFamily="sans-serif-medium"
             app:cornerRadius="16dp"
             app:elevation="2dp" />
     </LinearLayout>

@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.CoffeeApp" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.CoffeStore" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:statusBarColor">@color/coffee_dark</item>
         <item name="android:navigationBarColor">@color/coffee_dark</item>
 

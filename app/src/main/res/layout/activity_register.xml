@@ -4,13 +4,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_coffee_gradient"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:fillViewport="true"
+    android:descendantFocusability="afterDescendants"
+    android:focusable="false"
+    android:focusableInTouchMode="false"
+    android:clickable="false">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="top|center_horizontal">
+
+        <!-- Back button -->
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="start"
+            android:background="@android:color/transparent"
+            android:contentDescription="Back"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_revert" />
 
         <!-- Title -->
         <TextView
@@ -39,24 +55,21 @@
                 android:textStyle="normal"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enter your full name"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="16sp"
-                android:layout_marginBottom="4dp" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_fullname"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:hint="Enter your full name"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
                 android:textColor="@color/text_primary_light"
                 android:textSize="18sp"
                 android:paddingTop="8dp"
@@ -81,25 +94,22 @@
                 android:textStyle="normal"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enter your email address"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="16sp"
-                android:layout_marginBottom="4dp" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="textEmailAddress"
+                android:hint="Enter your email address"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
                 android:textColor="@color/text_primary_light"
                 android:textSize="18sp"
                 android:paddingTop="8dp"
@@ -124,25 +134,22 @@
                 android:textStyle="normal"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enter your phone number"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="16sp"
-                android:layout_marginBottom="4dp" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="phone"
+                android:hint="Enter your phone number"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
                 android:textColor="@color/text_primary_light"
                 android:textSize="18sp"
                 android:paddingTop="8dp"
@@ -180,17 +187,13 @@
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <AutoCompleteTextView
-                android:id="@+id/actv_role"
+            <Spinner
+                android:id="@+id/sp_role"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:textColor="@color/text_primary_light"
-                android:textSize="18sp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:textColorHint="@color/text_secondary_light"
-                android:inputType="none" />
+                android:paddingBottom="8dp" />
 
         </LinearLayout>
 
@@ -210,25 +213,22 @@
                 android:textStyle="normal"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="At least 6 characters"
-                android:textColor="@color/text_secondary_light"
-                android:textSize="16sp"
-                android:layout_marginBottom="4dp" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/text_secondary_light" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:inputType="textPassword"
+                android:hint="At least 6 characters"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:enabled="true"
                 android:textColor="@color/text_primary_light"
                 android:textSize="18sp"
                 android:paddingTop="8dp"
