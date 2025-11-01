@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
             setContentView(R.layout.activity_login);
 
             // Initialize views AFTER setContentView
-            etUsername = findViewById(R.id.et_username);
+            etUsername = findViewById(R.id.ernameet_us);
             etPassword = findViewById(R.id.et_password);
             btnLogin = findViewById(R.id.btn_login);
             btnRegister = findViewById(R.id.btn_register);
@@ -57,6 +57,18 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
                 }
             });
+
+            // Ensure inputs are interactive and focused initially
+            etUsername.setEnabled(true);
+            etUsername.setFocusable(true);
+            etUsername.setFocusableInTouchMode(true);
+            etPassword.setEnabled(true);
+            etPassword.setFocusable(true);
+            etPassword.setFocusableInTouchMode(true);
+            etUsername.requestFocus();
+            getWindow().setSoftInputMode(
+                    android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+            );
 
             // Register button listener (was missing)
             btnRegister.setOnClickListener(v -> {

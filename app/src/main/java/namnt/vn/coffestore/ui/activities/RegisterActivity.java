@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;  // Cho Spinner Role nếu cần
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ public class RegisterActivity extends AppCompatActivity {
     private static final String TAG = "RegisterActivity";
     private TextInputEditText etFullName, etEmail, etPhone, etPassword;
     private MaterialButton btnRegister;
+    private ImageButton btnBack;
     private Spinner spRole;
     private AuthViewModel viewModel;
 
@@ -38,6 +40,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         spRole = findViewById(R.id.sp_role);
         btnRegister = findViewById(R.id.btn_register);
+        btnBack = findViewById(R.id.btn_back);
 
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
@@ -87,6 +90,22 @@ public class RegisterActivity extends AppCompatActivity {
             RegisterRequest request = new RegisterRequest(fullName, email, phone, password, roleInt);
             viewModel.register(request);
         });
+
+        // Back button -> return to LoginActivity
+        btnBack.setOnClickListener(v -> {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        });
+
+        // Ensure keyboard shows for first field
+        etFullName.setEnabled(true);
+        etFullName.setFocusable(true);
+        etFullName.setFocusableInTouchMode(true);
+        etFullName.requestFocus();
+        getWindow().setSoftInputMode(
+                android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE |
+                        android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        );
 
         // Observe auth result
         viewModel.getAuthResult().observe(this, new Observer<AuthViewModel.AuthResult>() {
