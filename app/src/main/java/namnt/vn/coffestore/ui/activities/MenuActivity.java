@@ -10,8 +10,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,6 +25,7 @@ import java.util.List;
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.CoffeeItem;
 import namnt.vn.coffestore.ui.adapters.MenuAdapter;
+import namnt.vn.coffestore.viewmodel.AuthViewModel;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -31,16 +35,24 @@ public class MenuActivity extends AppCompatActivity {
     private EditText etSearch;
     private TextView btnBrewedCoffee, btnColdBrew, btnBeverages;
     private RecyclerView rvCoffeeList;
+    private com.google.android.material.navigation.NavigationView navigationView;
     
     private MenuAdapter menuAdapter;
     private List<CoffeeItem> allCoffeeItems;
     private String currentCategory = "Brewed Coffee";
     private String currentSearchQuery = "";
+    private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
+
+        initAuthViewModel();
+        if (authViewModel.getAccessToken().isEmpty()) {
+            redirectToLogin();
+            return;
+        }
 
         initViews();
         setupGreeting();
@@ -48,6 +60,8 @@ public class MenuActivity extends AppCompatActivity {
         setupRecyclerView();
         loadSampleData();
         setupClickListeners();
+        setupNavigationDrawer();
+        observeLogout();
     }
 
     private void initViews() {
@@ -62,6 +76,7 @@ public class MenuActivity extends AppCompatActivity {
         btnColdBrew = findViewById(R.id.btnColdBrew);
         btnBeverages = findViewById(R.id.btnBeverages);
         rvCoffeeList = findViewById(R.id.rvCoffeeList);
+        navigationView = findViewById(R.id.navigationView);
     }
 
     private void setupGreeting() {
@@ -178,10 +193,10 @@ public class MenuActivity extends AppCompatActivity {
     private void setupClickListeners() {
         ivMenu.setOnClickListener(v -> {
             // Open drawer from right side
-            if (drawerLayout.isDrawerOpen(findViewById(R.id.navigationView))) {
+            if (drawerLayout.isDrawerOpen(navigationView)) {
                 drawerLayout.closeDrawers();
             } else {
-                drawerLayout.openDrawer(findViewById(R.id.navigationView));
+                drawerLayout.openDrawer(navigationView);
             }
         });
         
@@ -209,5 +224,57 @@ public class MenuActivity extends AppCompatActivity {
                 // Not needed
             }
         });
+    }
+
+    private void initAuthViewModel() {
+        authViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new AuthViewModel(getApplication());
+            }
+        }).get(AuthViewModel.class);
+    }
+
+    private void setupNavigationDrawer() {
+        if (navigationView == null) {
+            return;
+        }
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_logout) {
+                drawerLayout.closeDrawers();
+                authViewModel.logout();
+                return true;
+            }
+            if (id == R.id.nav_home) {
+                drawerLayout.closeDrawers();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void observeLogout() {
+        authViewModel.getLogoutResult().observe(this, new Observer<AuthViewModel.AuthResult>() {
+            @Override
+            public void onChanged(AuthViewModel.AuthResult result) {
+                if (result == null) {
+                    return;
+                }
+                Toast.makeText(MenuActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                if (result.isSuccess()) {
+                    redirectToLogin();
+                }
+            }
+        });
+    }
+
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

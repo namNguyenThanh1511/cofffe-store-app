@@ -2,10 +2,14 @@ package namnt.vn.coffestore.data.repository;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.io.IOException;
+
+import namnt.vn.coffestore.data.model.api.ApiError;
 import namnt.vn.coffestore.data.model.api.ApiResponse;
 import namnt.vn.coffestore.data.model.auth.LoginRequest;
 import namnt.vn.coffestore.data.model.auth.RegisterRequest;
@@ -13,15 +17,19 @@ import namnt.vn.coffestore.data.model.auth.TokenResponse;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AuthRepository {
     private ApiService apiService;
-    private MutableLiveData<AuthViewModel.AuthResult> authLiveData = new MutableLiveData<>();
+    private final MutableLiveData<AuthViewModel.AuthResult> authLiveData = new MutableLiveData<>();
+    private final MutableLiveData<AuthViewModel.AuthResult> logoutLiveData = new MutableLiveData<>();
 
-    private SharedPreferences prefs;  // Để lưu token
+    private final SharedPreferences prefs;  // Để lưu token
 
     public AuthRepository(Context context) {
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
@@ -34,38 +42,19 @@ public class AuthRepository {
         apiService.register(request).enqueue(new Callback<ApiResponse<String>>() {
             @Override
             public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                if (response.isSuccessful() && response.body().isSuccess()) {
-                    authLiveData.setValue(new AuthViewModel.AuthResult() {
-                        @Override public boolean isSuccess() { return true; }  // Or false
-                        @Override public String getMessage() { return "Message here"; }
-
-                        @Override
-                        public TokenResponse getTokenResponse() {
-                            return null;
-                        }
-                    });
+                ApiResponse<String> body = response.body();
+                if (response.isSuccessful() && body != null && body.isSuccess()) {
+                    postResult(authLiveData, true,
+                            !TextUtils.isEmpty(body.getMessage()) ? body.getMessage() : "Đăng ký thành công",
+                            null);
                 } else {
-                    String errorMsg;
-                    if (response.body() != null && response.body().getErrors() != null) {
-                        errorMsg = response.body().getErrors().get(0).getMessage();  // Lấy lỗi đầu tiên (validation)
-                    } else {
-                        errorMsg = "Lỗi đăng ký";
-                    }
-                    authLiveData.setValue(new AuthViewModel.AuthResult() {
-                        @Override public TokenResponse getTokenResponse() { return null; }
-                        @Override public String getMessage() { return errorMsg; }
-                        @Override public boolean isSuccess() { return false; }
-                    });
+                    postResult(authLiveData, false, extractErrorMessage(response, "Lỗi đăng ký"), null);
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                authLiveData.setValue(new AuthViewModel.AuthResult() {
-                    @Override public TokenResponse getTokenResponse() { return null; }
-                    @Override public String getMessage() { return "Lỗi kết nối: " + t.getMessage(); }
-                    @Override public boolean isSuccess() { return false; }
-                });
+                postResult(authLiveData, false, "Lỗi kết nối: " + t.getMessage(), null);
             }
         });
     }
@@ -74,42 +63,31 @@ public class AuthRepository {
         apiService.login(request).enqueue(new Callback<ApiResponse<TokenResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<TokenResponse>> call, Response<ApiResponse<TokenResponse>> response) {
-                if (response.isSuccessful() && response.body().isSuccess()) {
-                    TokenResponse token = response.body().getData();
+                ApiResponse<TokenResponse> body = response.body();
+                if (response.isSuccessful() && body != null && body.isSuccess() && body.getData() != null) {
+                    TokenResponse token = body.getData();
                     saveTokens(token);
-                    authLiveData.setValue(new AuthViewModel.AuthResult() {
-                        @Override public TokenResponse getTokenResponse() { return token; }
-                        @Override public String getMessage() { return response.body().getMessage() != null ? response.body().getMessage() : "Đăng nhập thành công"; }
-                        @Override public boolean isSuccess() { return true; }
-                    });
+                    postResult(authLiveData, true,
+                            !TextUtils.isEmpty(body.getMessage()) ? body.getMessage() : "Đăng nhập thành công",
+                            token);
                 } else {
-                    String errorMsg;
-                    if (response.body() != null && response.body().getErrors() != null) {
-                        errorMsg = response.body().getErrors().get(0).getMessage();
-                    } else {
-                        errorMsg = "Lỗi đăng nhập";
-                    }
-                    authLiveData.setValue(new AuthViewModel.AuthResult() {
-                        @Override public TokenResponse getTokenResponse() { return null; }
-                        @Override public String getMessage() { return errorMsg; }
-                        @Override public boolean isSuccess() { return false; }
-                    });
+                    postResult(authLiveData, false, extractErrorMessage(response, "Lỗi đăng nhập"), null);
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<TokenResponse>> call, Throwable t) {
-                authLiveData.setValue(new AuthViewModel.AuthResult() {
-                    @Override public TokenResponse getTokenResponse() { return null; }
-                    @Override public String getMessage() { return "Lỗi kết nối: " + t.getMessage(); }
-                    @Override public boolean isSuccess() { return false; }
-                });
+                postResult(authLiveData, false, "Lỗi kết nối: " + t.getMessage(), null);
             }
         });
     }
 
     public LiveData<AuthViewModel.AuthResult> getAuthLiveData() {
         return authLiveData;
+    }
+
+    public LiveData<AuthViewModel.AuthResult> getLogoutLiveData() {
+        return logoutLiveData;
     }
 
     private void saveTokens(TokenResponse token) {
@@ -131,9 +109,151 @@ public class AuthRepository {
         return prefs.getString("access_token", "");
     }
 
+    public String getRefreshToken() {
+        return prefs.getString("refresh_token", "");
+    }
+
     // Helper: Kiểm tra token còn hạn (tùy chọn)
     public boolean isTokenValid() {
         long expiry = prefs.getLong("access_expiry", 0);
+        if (expiry == 0) {
+            // Nếu API không trả expiry, coi như token hợp lệ cho tới khi server báo lỗi
+            return !TextUtils.isEmpty(getAccessToken());
+        }
         return System.currentTimeMillis() < expiry;
+    }
+
+    public void logout() {
+        String accessToken = getAccessToken();
+        if (TextUtils.isEmpty(accessToken)) {
+            clearTokens();
+            postResult(logoutLiveData, true, "Đã đăng xuất", null);
+            return;
+        }
+
+        String bearer = "Bearer " + accessToken;
+
+        apiService.logout(bearer).enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                clearTokens();
+
+                ApiResponse<String> body = response.body();
+                boolean success = response.isSuccessful() && body != null && body.isSuccess();
+                if (success) {
+                    postResult(logoutLiveData, true,
+                            !TextUtils.isEmpty(body.getMessage()) ? body.getMessage() : "Đăng xuất thành công",
+                            null);
+                } else {
+                    postResult(logoutLiveData, false,
+                            extractErrorMessage(response, "Đăng xuất thất bại"),
+                            null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                clearTokens();
+                postResult(logoutLiveData, false, "Lỗi kết nối: " + t.getMessage(), null);
+            }
+        });
+    }
+
+    public void refreshToken() {
+        String refreshToken = getRefreshToken();
+        if (TextUtils.isEmpty(refreshToken)) {
+            postResult(authLiveData, false, "Không có refresh token", null);
+            return;
+        }
+
+        RequestBody body = RequestBody.create(MediaType.parse("text/plain"), refreshToken);
+        apiService.refreshToken(body).enqueue(new Callback<ApiResponse<TokenResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<TokenResponse>> call, Response<ApiResponse<TokenResponse>> response) {
+                ApiResponse<TokenResponse> apiResponse = response.body();
+                if (response.isSuccessful() && apiResponse != null && apiResponse.isSuccess() && apiResponse.getData() != null) {
+                    TokenResponse token = apiResponse.getData();
+                    saveTokens(token);
+                    postResult(authLiveData, true,
+                            !TextUtils.isEmpty(apiResponse.getMessage()) ? apiResponse.getMessage() : "Làm mới token thành công",
+                            token);
+                } else {
+                    postResult(authLiveData, false,
+                            extractErrorMessage(response, "Làm mới token thất bại"),
+                            null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<TokenResponse>> call, Throwable t) {
+                postResult(authLiveData, false, "Lỗi kết nối: " + t.getMessage(), null);
+            }
+        });
+    }
+
+    private void clearTokens() {
+        prefs.edit()
+                .remove("access_token")
+                .remove("refresh_token")
+                .remove("access_expiry")
+                .remove("refresh_expiry")
+                .apply();
+    }
+
+    private String extractErrorMessage(Response<?> response, String defaultMessage) {
+        String fallback = defaultMessage;
+        ApiResponse<?> errorBody = null;
+        if (response.body() instanceof ApiResponse) {
+            errorBody = (ApiResponse<?>) response.body();
+        }
+
+        if (errorBody != null) {
+            if (!TextUtils.isEmpty(errorBody.getMessage())) {
+                return errorBody.getMessage();
+            }
+
+            if (errorBody.getErrors() != null && !errorBody.getErrors().isEmpty()) {
+                ApiError first = errorBody.getErrors().get(0);
+                if (first != null && !TextUtils.isEmpty(first.getMessage())) {
+                    return first.getMessage();
+                }
+            }
+        }
+
+        ResponseBody rawError = response.errorBody();
+        if (rawError != null) {
+            try {
+                String raw = rawError.string();
+                if (!TextUtils.isEmpty(raw)) {
+                    return raw;
+                }
+            } catch (IOException ignored) {
+                // no-op
+            }
+        }
+
+        return fallback;
+    }
+
+    private void postResult(MutableLiveData<AuthViewModel.AuthResult> liveData,
+                             boolean success,
+                             String message,
+                             TokenResponse tokenResponse) {
+        liveData.postValue(new AuthViewModel.AuthResult() {
+            @Override
+            public boolean isSuccess() {
+                return success;
+            }
+
+            @Override
+            public String getMessage() {
+                return message;
+            }
+
+            @Override
+            public TokenResponse getTokenResponse() {
+                return tokenResponse;
+            }
+        });
     }
 }

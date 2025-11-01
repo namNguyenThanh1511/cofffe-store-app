@@ -82,11 +82,11 @@ public class LoginActivity extends AppCompatActivity {
                     if (result != null) {
                         if (result.isSuccess()) {
                             Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
-                            if (viewModel.isTokenValid()) {
-                                startActivity(new Intent(LoginActivity.this, MenuActivity.class));
+                            if (result.getTokenResponse() != null && viewModel.isTokenValid()) {
+                                Intent intent = new Intent(LoginActivity.this, MenuActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
                                 finish();
-                            } else {
-                                Toast.makeText(LoginActivity.this, "Token không hợp lệ, vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
                             }
                         } else {
                             Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();

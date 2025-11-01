@@ -73,14 +73,14 @@ public class RegisterActivity extends AppCompatActivity {
             // FIX: Map String to int (giả sử Customer=1, Admin=2 – kiểm tra enum .NET nếu khác)
             int roleInt;
             switch (roleStr) {
-                case  "Staff" :
-                    roleInt = 1;
-                    break;
                 case "Customer":
-                    roleInt = 2;
+                    roleInt = 0;
                     break;
                 case "Admin":
-                    roleInt = 0;
+                    roleInt = 1;
+                    break;
+                case "Barista":
+                    roleInt = 2;
                     break;
                 default:
                     Toast.makeText(this, "Vai trò không hợp lệ", Toast.LENGTH_SHORT).show();
@@ -112,11 +112,11 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onChanged(AuthViewModel.AuthResult result) {
                 if (result != null) {
-                    if (result.isSuccess()) {
+                    if (result.isSuccess() && result.getTokenResponse() == null) {
                         Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                         finish();
-                    } else {
+                    } else if (!result.isSuccess()) {
                         Toast.makeText(RegisterActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }

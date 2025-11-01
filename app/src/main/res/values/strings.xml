@@ -11,6 +11,10 @@
     <string name="cold_brew">Cold Brew</string>
     <string name="beverages">Beverages</string>
     <string name="no_image">Chưa có ảnh</string>
+
+    <!-- Navigation -->
+    <string name="menu_home">Trang chủ</string>
+    <string name="menu_logout">Đăng xuất</string>
     
     <!-- Product Detail -->
     <string name="coffee_size">Coffee Size</string>
