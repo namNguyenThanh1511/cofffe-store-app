@@ -20,6 +20,7 @@ import java.util.List;
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.CartItem;
 import namnt.vn.coffestore.ui.adapters.CartAdapter;
+import namnt.vn.coffestore.utils.CurrencyUtils;
 
 public class CartActivity extends AppCompatActivity {
 
@@ -32,7 +33,7 @@ public class CartActivity extends AppCompatActivity {
     private CartAdapter cartAdapter;
     private List<CartItem> cartItems;
     
-    private static final double DELIVERY_FEE = 2.00;
+    private static final double DELIVERY_FEE = 1.00; // $1 = 25.000₫
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,9 +128,9 @@ public class CartActivity extends AppCompatActivity {
             double total = subtotal + DELIVERY_FEE;
             
             // Update UI
-            tvSubtotal.setText(String.format("$%.2f", subtotal));
-            tvDeliveryFee.setText(String.format("$%.2f", DELIVERY_FEE));
-            tvTotal.setText(String.format("$%.2f", total));
+            tvSubtotal.setText(CurrencyUtils.formatPrice(subtotal));
+            tvDeliveryFee.setText(CurrencyUtils.formatPrice(DELIVERY_FEE));
+            tvTotal.setText(CurrencyUtils.formatPrice(total));
         }
     }
 

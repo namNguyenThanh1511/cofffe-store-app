@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CoffeStore"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:usesCleartextTraffic="false"><!-- Tắt cleartext, chỉ HTTPS -->
+        android:usesCleartextTraffic="true"><!-- Cho phép HTTP để load ảnh từ internet -->
         <activity
             android:name=".ui.activities.LoginActivity"
             android:exported="true">

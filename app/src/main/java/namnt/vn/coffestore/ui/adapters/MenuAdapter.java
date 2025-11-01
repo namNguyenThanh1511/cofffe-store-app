@@ -1,6 +1,7 @@
 package namnt.vn.coffestore.ui.adapters;
 
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,15 +13,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.CoffeeItem;
+import namnt.vn.coffestore.utils.CurrencyUtils;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.CoffeeViewHolder> {
     
+    private static final String TAG = "MenuAdapter";
     private List<CoffeeItem> coffeeList;
     private OnItemClickListener listener;
 
@@ -78,12 +82,12 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.CoffeeViewHold
 
         public void bind(CoffeeItem item, OnItemClickListener listener) {
             tvCoffeeName.setText(item.getName());
-            tvPrice.setText(String.format("$%.2f", item.getPrice()));
+            tvPrice.setText(CurrencyUtils.formatPrice(item.getPrice()));
 
             // Show/hide old price with strikethrough
             if (item.getOldPrice() != null && item.getOldPrice() > 0) {
                 tvOldPrice.setVisibility(View.VISIBLE);
-                tvOldPrice.setText(String.format("$%.2f", item.getOldPrice()));
+                tvOldPrice.setText(CurrencyUtils.formatPrice(item.getOldPrice()));
                 tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             } else {
                 tvOldPrice.setVisibility(View.GONE);
@@ -94,14 +98,32 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.CoffeeViewHold
                 tvNoImage.setVisibility(View.GONE);
                 ivCoffeeImage.setVisibility(View.VISIBLE);
                 
+                Log.d(TAG, "Loading image for: " + item.getName() + " from URL: " + item.getImageUrl());
+                
                 Glide.with(itemView.getContext())
                     .load(item.getImageUrl())
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .transition(DrawableTransitionOptions.withCrossFade())
                     .centerCrop()
                     .placeholder(R.drawable.bg_image_placeholder)
                     .error(R.drawable.bg_image_placeholder)
+                    .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                            Log.e(TAG, "Failed to load image for: " + item.getName() + " - Error: " + (e != null ? e.getMessage() : "Unknown"));
+                            if (e != null) e.logRootCauses(TAG);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                            Log.d(TAG, "Successfully loaded image for: " + item.getName());
+                            return false;
+                        }
+                    })
                     .into(ivCoffeeImage);
             } else {
+                Log.w(TAG, "No image URL for: " + item.getName());
                 tvNoImage.setVisibility(View.VISIBLE);
                 ivCoffeeImage.setVisibility(View.GONE);
             }
