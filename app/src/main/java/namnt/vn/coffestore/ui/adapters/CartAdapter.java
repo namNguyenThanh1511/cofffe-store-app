@@ -16,6 +16,7 @@ import java.util.List;
 
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.CartItem;
+import namnt.vn.coffestore.utils.CurrencyUtils;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
 
@@ -80,7 +81,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         public void bind(CartItem item, OnCartItemListener listener) {
             tvCartItemName.setText(item.getName());
             tvCartItemSize.setText(item.getSize());
-            tvCartItemPrice.setText(String.format("$%.2f", item.getTotal()));
+            tvCartItemPrice.setText(CurrencyUtils.formatPrice(item.getTotal()));
             tvCartItemQty.setText(String.valueOf(item.getQuantity()));
 
             // Load image

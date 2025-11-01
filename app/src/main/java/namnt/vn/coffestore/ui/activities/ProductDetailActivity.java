@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 
 import namnt.vn.coffestore.R;
+import namnt.vn.coffestore.utils.CurrencyUtils;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
@@ -79,11 +80,11 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         // Set data to views
         tvProductName.setText(productName);
-        tvPrice.setText(String.format("$%.2f", productPrice));
+        tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
         
         if (productOldPrice != null && productOldPrice > 0) {
             tvOldPrice.setVisibility(TextView.VISIBLE);
-            tvOldPrice.setText(String.format("$%.2f", productOldPrice));
+            tvOldPrice.setText(CurrencyUtils.formatPrice(productOldPrice));
             tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
         } else {
             tvOldPrice.setVisibility(TextView.GONE);
@@ -120,7 +121,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         
         // Update price based on size
         productPrice = basePrice * priceMultiplier;
-        tvPrice.setText(String.format("$%.2f", productPrice));
+        tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
         
         updateTotalPrice();
     }
@@ -145,7 +146,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void updateTotalPrice() {
         double total = productPrice * quantity;
-        tvTotalPrice.setText(String.format("$%.2f", total));
+        tvTotalPrice.setText(CurrencyUtils.formatPrice(total));
     }
 
     private void setupClickListeners() {
