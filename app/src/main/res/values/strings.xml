@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">CoffeStore</string>
+    
+    <!-- Menu Activity -->
+    <string name="greeting_morning">Good Morning</string>
+    <string name="greeting_evening">Good Evening</string>
+    <string name="user_name">User</string>
+    <string name="search_coffee">Search Coffee</string>
+    <string name="categories">Categories</string>
+    <string name="brewed_coffee">Brewed Coffee</string>
+    <string name="cold_brew">Cold Brew</string>
+    <string name="beverages">Beverages</string>
+    <string name="no_image">Chưa có ảnh</string>
+    
+    <!-- Product Detail -->
+    <string name="coffee_size">Coffee Size</string>
+    <string name="size_small">Small</string>
+    <string name="size_medium">Medium</string>
+    <string name="size_large">Large</string>
+    <string name="about">About</string>
+    <string name="read_more">Read More</string>
+    <string name="add_to_cart">Add to cart</string>
+    <string name="product_description">Cappuccino is the richest of all types of coffee types because it uses cream instead of milk... Read More</string>
 </resources>

@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
-import namnt.vn.coffestore.MainActivity;
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.auth.LoginRequest;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
@@ -84,7 +83,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (result.isSuccess()) {
                             Toast.makeText(LoginActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
                             if (viewModel.isTokenValid()) {
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                startActivity(new Intent(LoginActivity.this, MenuActivity.class));
                                 finish();
                             } else {
                                 Toast.makeText(LoginActivity.this, "Token không hợp lệ, vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
@@ -98,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
 
             // Check if already logged in
             if (!viewModel.getAccessToken().isEmpty() && viewModel.isTokenValid()) {
-                startActivity(new Intent(this, MainActivity.class));
+                startActivity(new Intent(this, MenuActivity.class));
                 finish();
             }
 
