@@ -120,162 +120,65 @@
                     android:imeOptions="actionSearch" />
             </LinearLayout>
 
-            <!-- Categories Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/categories"
-                android:textColor="@color/text_white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Category Buttons -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/btnBrewedCoffee"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/brewed_coffee"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/btnColdBrew"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/cold_brew"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/btnBeverages"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/beverages"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- Price Filter Section -->
+            <!-- Origin Filter Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Mức giá"
+                android:text="Xuất xứ"
                 android:textColor="@color/text_white"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <HorizontalScrollView
+            <Spinner
+                android:id="@+id/spinnerOrigin"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginTop="12dp"
-                android:scrollbars="none">
+                android:background="@drawable/bg_search"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:popupBackground="@drawable/bg_search" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+            <!-- Roast Level Filter Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Độ rang"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/btnPriceAll"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="Tất cả"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
+            <Spinner
+                android:id="@+id/spinnerRoastLevel"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_search"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:popupBackground="@drawable/bg_search" />
 
-                    <TextView
-                        android:id="@+id/btnPriceLow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="&lt; 30.000₫"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
+            <!-- Brew Method Filter Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Phương pháp pha"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/btnPriceMedium"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="30k - 50k"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/btnPriceHigh"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="> 50.000₫"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-                </LinearLayout>
-            </HorizontalScrollView>
+            <Spinner
+                android:id="@+id/spinnerBrewMethod"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_search"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:popupBackground="@drawable/bg_search" />
 
             <!-- Coffee Grid -->
             <androidx.recyclerview.widget.RecyclerView

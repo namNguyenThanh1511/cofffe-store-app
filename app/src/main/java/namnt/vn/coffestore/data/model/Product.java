@@ -19,6 +19,15 @@ public class Product {
     @SerializedName("alias")
     private String alias;
     
+    @SerializedName("origin")
+    private String origin;
+    
+    @SerializedName("roastLevel")
+    private String roastLevel;
+    
+    @SerializedName("brewMethod")
+    private String brewMethod;
+    
     @SerializedName("variants")
     private List<ProductVariant> variants;
 
@@ -26,12 +35,16 @@ public class Product {
     public Product() {
     }
 
-    public Product(String id, String name, String description, String imageUrl, String alias, List<ProductVariant> variants) {
+    public Product(String id, String name, String description, String imageUrl, String alias, 
+                   String origin, String roastLevel, String brewMethod, List<ProductVariant> variants) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
         this.alias = alias;
+        this.origin = origin;
+        this.roastLevel = roastLevel;
+        this.brewMethod = brewMethod;
         this.variants = variants;
     }
 
@@ -115,5 +128,37 @@ public class Product {
 
     public void setVariants(List<ProductVariant> variants) {
         this.variants = variants;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getRoastLevel() {
+        return roastLevel;
+    }
+
+    public void setRoastLevel(String roastLevel) {
+        this.roastLevel = roastLevel;
+    }
+    
+    public RoastLevel getRoastLevelEnum() {
+        return RoastLevel.fromString(roastLevel);
+    }
+
+    public String getBrewMethod() {
+        return brewMethod;
+    }
+
+    public void setBrewMethod(String brewMethod) {
+        this.brewMethod = brewMethod;
+    }
+    
+    public BrewMethod getBrewMethodEnum() {
+        return BrewMethod.fromString(brewMethod);
     }
 }

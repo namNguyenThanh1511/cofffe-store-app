@@ -12,6 +12,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 import java.util.List;
 
@@ -31,4 +32,7 @@ public interface ApiService {
 
     @GET("api/products")
     Call<ApiResponse<List<Product>>> getProducts();
+    
+    @GET("api/products/{id}")
+    Call<ApiResponse<Product>> getProductById(@Path("id") String productId);
 }
