@@ -17,6 +17,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import namnt.vn.coffestore.ui.activities.OsmMapActivity;
+
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -241,20 +243,36 @@ public class MenuActivity extends AppCompatActivity {
             return;
         }
 
+        // (tuỳ chọn) set mặc định highlight ở Home
+        // navigationView.setCheckedItem(R.id.nav_home); // NEW
+
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                drawerLayout.closeDrawers();
+                return true;
+            }
+
+            if (id == R.id.nav_map) {              // NEW: xử lý menu "Map"
+                drawerLayout.closeDrawers();       // đóng drawer trước
+                startActivity(new Intent(
+                        MenuActivity.this,
+                        OsmMapActivity.class
+                ));
+                return true;
+            }
+
             if (id == R.id.nav_logout) {
                 drawerLayout.closeDrawers();
                 authViewModel.logout();
                 return true;
             }
-            if (id == R.id.nav_home) {
-                drawerLayout.closeDrawers();
-                return true;
-            }
+
             return false;
         });
     }
+
 
     private void observeLogout() {
         authViewModel.getLogoutResult().observe(this, new Observer<AuthViewModel.AuthResult>() {
