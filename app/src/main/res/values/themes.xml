@@ -1,4 +1,17 @@
 <resources>
+    <!-- App theme -->
+    <style name="Theme.CoffeeStore" parent="Theme.Material3.Light.NoActionBar">
+        <!-- màu chủ đạo của bạn -->
+        <item name="colorPrimary">#6D4C41</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Biến thể không có ActionBar -->
+    <style name="Theme.CoffeeStore.NoActionBar" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#6D4C41</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+    </style>
+
     <style name="Theme.CoffeStore" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:statusBarColor">@color/coffee_dark</item>
         <item name="android:navigationBarColor">@color/coffee_dark</item>
