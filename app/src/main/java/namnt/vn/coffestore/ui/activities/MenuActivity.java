@@ -11,8 +11,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +30,7 @@ import namnt.vn.coffestore.data.model.api.ApiResponse;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.ui.adapters.MenuAdapter;
+import namnt.vn.coffestore.viewmodel.AuthViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -42,6 +46,7 @@ public class MenuActivity extends AppCompatActivity {
     private TextView btnBrewedCoffee, btnColdBrew, btnBeverages;
     private TextView btnPriceAll, btnPriceLow, btnPriceMedium, btnPriceHigh;
     private RecyclerView rvCoffeeList;
+    private com.google.android.material.navigation.NavigationView navigationView;
     
     private MenuAdapter menuAdapter;
     private List<CoffeeItem> allCoffeeItems;
@@ -50,17 +55,26 @@ public class MenuActivity extends AppCompatActivity {
     private String currentSearchQuery = "";
     private String currentPriceRange = "ALL"; // ALL, LOW (<30k), MEDIUM (30-50k), HIGH (>50k)
     private ApiService apiService;
+    private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
 
+        initAuthViewModel();
+        if (authViewModel.getAccessToken().isEmpty()) {
+            redirectToLogin();
+            return;
+        }
+
         initViews();
         setupGreeting();
         setupCategoryButtons();
         setupRecyclerView();
         setupClickListeners();
+        setupNavigationDrawer();
+        observeLogout();
         
         // Initialize API service
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
@@ -85,6 +99,7 @@ public class MenuActivity extends AppCompatActivity {
         btnPriceMedium = findViewById(R.id.btnPriceMedium);
         btnPriceHigh = findViewById(R.id.btnPriceHigh);
         rvCoffeeList = findViewById(R.id.rvCoffeeList);
+        navigationView = findViewById(R.id.navigationView);
     }
 
     private void setupGreeting() {
@@ -343,10 +358,10 @@ public class MenuActivity extends AppCompatActivity {
     private void setupClickListeners() {
         ivMenu.setOnClickListener(v -> {
             // Open drawer from right side
-            if (drawerLayout.isDrawerOpen(findViewById(R.id.navigationView))) {
+            if (drawerLayout.isDrawerOpen(navigationView)) {
                 drawerLayout.closeDrawers();
             } else {
-                drawerLayout.openDrawer(findViewById(R.id.navigationView));
+                drawerLayout.openDrawer(navigationView);
             }
         });
         
@@ -374,5 +389,57 @@ public class MenuActivity extends AppCompatActivity {
                 // Not needed
             }
         });
+    }
+
+    private void initAuthViewModel() {
+        authViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new AuthViewModel(getApplication());
+            }
+        }).get(AuthViewModel.class);
+    }
+
+    private void setupNavigationDrawer() {
+        if (navigationView == null) {
+            return;
+        }
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_logout) {
+                drawerLayout.closeDrawers();
+                authViewModel.logout();
+                return true;
+            }
+            if (id == R.id.nav_home) {
+                drawerLayout.closeDrawers();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void observeLogout() {
+        authViewModel.getLogoutResult().observe(this, new Observer<AuthViewModel.AuthResult>() {
+            @Override
+            public void onChanged(AuthViewModel.AuthResult result) {
+                if (result == null) {
+                    return;
+                }
+                Toast.makeText(MenuActivity.this, result.getMessage(), Toast.LENGTH_SHORT).show();
+                if (result.isSuccess()) {
+                    redirectToLogin();
+                }
+            }
+        });
+    }
+
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

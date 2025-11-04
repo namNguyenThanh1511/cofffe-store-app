@@ -6,7 +6,10 @@ import java.util.List;
 
 public class ApiResponse<T> {
     @SerializedName("status")
-    private String status = "success";
+    private String status;
+
+    @SerializedName("isSuccess")
+    private Boolean isSuccess;
 
     @SerializedName("message")
     private String message = "";
@@ -18,18 +21,51 @@ public class ApiResponse<T> {
     private T data;
 
     public boolean isSuccess() {
-        return "success".equals(status);
+        if (isSuccess != null) {
+            return isSuccess;
+        }
+        return "success".equalsIgnoreCase(status);
     }
 
-    // Getters/Setters...
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-    public List<ApiError> getErrors() { return errors; }
-    public void setErrors(List<ApiError> errors) { this.errors = errors; }
-    public T getData() { return data; }
-    public void setData(T data) { this.data = data; }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Boolean getIsSuccess() {
+        return isSuccess;
+    }
+
+    public void setIsSuccess(Boolean isSuccess) {
+        this.isSuccess = isSuccess;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public List<ApiError> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<ApiError> errors) {
+        this.errors = errors;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
 }
 
 

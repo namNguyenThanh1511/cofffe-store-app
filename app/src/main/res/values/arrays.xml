@@ -3,6 +3,6 @@
     <string-array name="roles">
         <item>Customer</item>
         <item>Admin</item>
-        <item>Staff</item>
+        <item>Barista</item>
     </string-array>
 </resources>

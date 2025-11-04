@@ -1,20 +1,23 @@
 package namnt.vn.coffestore.network;
 
-import namnt.vn.coffestore.utils.Constants;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
-import okhttp3.OkHttpClient;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
+import namnt.vn.coffestore.utils.Constants;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
     private static Retrofit retrofit;
@@ -54,13 +57,20 @@ public class RetrofitClient {
                                 return true;
                             }
                         })
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .writeTimeout(30, TimeUnit.SECONDS)
                         .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))  // Log API calls để debug
                         .build();
+
+                Gson gson = new GsonBuilder()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+                        .create();
 
                 retrofit = new Retrofit.Builder()
                         .baseUrl(Constants.BASE_URL)
                         .client(okHttpClient)
-                        .addConverterFactory(GsonConverterFactory.create())
+                        .addConverterFactory(GsonConverterFactory.create(gson))
                         .build();
             } catch (Exception e) {
                 // Log lỗi nếu có (ví dụ: SSLContext init fail)

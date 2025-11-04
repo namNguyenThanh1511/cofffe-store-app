@@ -35,9 +35,25 @@ public class AuthViewModel extends AndroidViewModel {
         return repository.getAuthLiveData();
     }
 
+    public void logout() {
+        repository.logout();
+    }
+
+    public LiveData<AuthViewModel.AuthResult> getLogoutResult() {
+        return repository.getLogoutLiveData();
+    }
+
+    public void refreshToken() {
+        repository.refreshToken();
+    }
+
     // Thêm methods để lấy token
     public String getAccessToken() {
         return repository.getAccessToken();
+    }
+
+    public String getRefreshToken() {
+        return repository.getRefreshToken();
     }
 
     public boolean isTokenValid() {
