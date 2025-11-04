@@ -120,65 +120,93 @@
                     android:imeOptions="actionSearch" />
             </LinearLayout>
 
-            <!-- Origin Filter Section -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Filters Section - Horizontal Scroll -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Xuất xứ"
-                android:textColor="@color/text_white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:scrollbars="horizontal"
+                android:scrollbarStyle="outsideOverlay"
+                android:fadeScrollbars="false">
 
-            <Spinner
-                android:id="@+id/spinnerOrigin"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
+
+                    <!-- Origin Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerOrigin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
+
+                    <!-- Roast Level Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerRoastLevel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
+
+                    <!-- Brew Method Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerBrewMethod"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateLayout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_search"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:popupBackground="@drawable/bg_search" />
-
-            <!-- Roast Level Filter Section -->
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Độ rang"
-                android:textColor="@color/text_white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="60dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
 
-            <Spinner
-                android:id="@+id/spinnerRoastLevel"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_search"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:popupBackground="@drawable/bg_search" />
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/ic_empty_coffee"
+                    android:alpha="0.5"
+                    android:contentDescription="No products" />
 
-            <!-- Brew Method Filter Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Phương pháp pha"
-                android:textColor="@color/text_white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Chưa có sản phẩm"
+                    android:textColor="@color/text_white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-            <Spinner
-                android:id="@+id/spinnerBrewMethod"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_search"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:popupBackground="@drawable/bg_search" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Thử thay đổi bộ lọc để xem sản phẩm khác"
+                    android:textColor="@color/text_gray"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+            </LinearLayout>
 
             <!-- Coffee Grid -->
             <androidx.recyclerview.widget.RecyclerView

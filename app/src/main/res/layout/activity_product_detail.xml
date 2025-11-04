@@ -98,16 +98,87 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Size Buttons -->
+            <!-- Add Customization Button -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/brown_card"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:id="@+id/btnOpenCustomize"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_plus"
+                        android:background="@drawable/bg_round_accent"
+                        android:padding="8dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tùy chỉnh đơn hàng"
+                            android:textColor="@color/text_white"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chọn kích cỡ, nhiệt độ, độ ngọt..."
+                            android:textColor="@color/text_gray"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="@color/coffee_accent" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Temperature Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Nhiệt độ"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal"
-                android:gravity="start">
+                android:gravity="start"
+                android:visibility="gone">
 
                 <TextView
-                    android:id="@+id/btnSizeSmall"
+                    android:id="@+id/btnTempHot"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -116,14 +187,14 @@
                     android:gravity="center"
                     android:paddingTop="12dp"
                     android:paddingBottom="12dp"
-                    android:text="@string/size_small"
+                    android:text="Nóng"
                     android:textColor="@color/text_white"
                     android:textSize="14sp"
                     android:clickable="true"
                     android:focusable="true" />
 
                 <TextView
-                    android:id="@+id/btnSizeMedium"
+                    android:id="@+id/btnTempColdBrew"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -132,14 +203,14 @@
                     android:gravity="center"
                     android:paddingTop="12dp"
                     android:paddingBottom="12dp"
-                    android:text="@string/size_medium"
+                    android:text="Pha lạnh"
                     android:textColor="@color/text_white"
                     android:textSize="14sp"
                     android:clickable="true"
                     android:focusable="true" />
 
                 <TextView
-                    android:id="@+id/btnSizeLarge"
+                    android:id="@+id/btnTempIce"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -147,9 +218,175 @@
                     android:gravity="center"
                     android:paddingTop="12dp"
                     android:paddingBottom="12dp"
-                    android:text="@string/size_large"
+                    android:text="Đá"
                     android:textColor="@color/text_white"
                     android:textSize="14sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- Sweetness Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Độ ngọt"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="start"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/btnSweetnessSweet"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Ngọt"
+                    android:textColor="@color/text_white"
+                    android:textSize="14sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnSweetnessNormal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Bình thường"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnSweetnessLess"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Ít ngọt"
+                    android:textColor="@color/text_white"
+                    android:textSize="14sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnSweetnessNoSugar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Không đường"
+                    android:textColor="@color/text_white"
+                    android:textSize="11sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- Milk Type Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Loại sữa"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="start"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/btnMilkDairy"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Sữa tươi"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnMilkCondensed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Sữa đặc"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnMilkPlant"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Sữa thực vật"
+                    android:textColor="@color/text_white"
+                    android:textSize="11sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnMilkNone"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_size_button"
+                    android:gravity="center"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:text="Không sữa"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
                     android:clickable="true"
                     android:focusable="true" />
             </LinearLayout>
@@ -243,7 +480,8 @@
                 android:text="@string/about"
                 android:textColor="@color/text_white"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tvAbout"
@@ -253,7 +491,8 @@
                 android:text="@string/product_description"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp"
-                android:lineSpacingExtra="4dp" />
+                android:lineSpacingExtra="4dp"
+                android:visibility="gone" />
 
             <!-- Add to Cart Button -->
             <LinearLayout
@@ -269,7 +508,7 @@
                     android:layout_height="56dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="12dp"
-                    android:text="@string/add_to_cart"
+                    android:text="Đặt hàng"
                     android:textColor="@color/text_white"
                     android:textSize="16sp"
                     android:textStyle="bold"

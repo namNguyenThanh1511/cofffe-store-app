@@ -41,4 +41,8 @@
     <color name="btn_login_bg_pressed">#D39F63</color>
     <color name="btn_create_bg">#8C5631</color>           <!-- nâu caramel đậm vừa -->
     <color name="btn_create_bg_pressed">#724326</color>   <!-- tone tối hơn khi nhấn -->
+    
+    <!-- Dialog colors -->
+    <color name="gray">#666666</color>
+    <color name="brown">#8B6F47</color>
 </resources>

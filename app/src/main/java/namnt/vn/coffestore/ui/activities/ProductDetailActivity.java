@@ -1,14 +1,21 @@
 package namnt.vn.coffestore.ui.activities;
 
+import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
@@ -16,13 +23,25 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.ProductVariant;
+import namnt.vn.coffestore.data.model.api.ApiResponse;
+import namnt.vn.coffestore.data.model.order.OrderItem;
+import namnt.vn.coffestore.data.model.order.OrderRequest;
+import namnt.vn.coffestore.data.model.order.OrderResponse;
+import namnt.vn.coffestore.network.ApiService;
+import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.utils.CurrencyUtils;
+import namnt.vn.coffestore.viewmodel.AuthViewModel;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProductDetailActivity extends AppCompatActivity {
     private static final String TAG = "ProductDetailActivity";
@@ -31,8 +50,13 @@ public class ProductDetailActivity extends AppCompatActivity {
     private ImageView btnDecreaseQty, btnIncreaseQty;
     private TextView tvProductName, tvDescription, tvAbout;
     private TextView tvPrice, tvOldPrice, tvQuantity, tvTotalPrice;
-    private TextView btnSizeSmall, btnSizeMedium, btnSizeLarge;
+    private TextView btnTempHot, btnTempColdBrew, btnTempIce;
+    private TextView btnSweetnessSweet, btnSweetnessNormal, btnSweetnessLess, btnSweetnessNoSugar;
+    private TextView btnMilkDairy, btnMilkCondensed, btnMilkPlant, btnMilkNone;
     private MaterialButton btnAddToCart;
+    
+    private ApiService apiService;
+    private AuthViewModel authViewModel;
 
     private String productId, productName, productImage, productCategory, productDescription;
     private double productPrice;
@@ -40,6 +64,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     
     private int quantity = 1;
     private String selectedSize = "M"; // Default size
+    private int selectedTemperature = 0; // Default: 0=Hot
+    private int selectedSweetness = 1; // Default: 1=Normal
+    private int selectedMilkType = 0; // Default: 0=Dairy
     private List<ProductVariant> variants;
     private Map<String, ProductVariant> variantMap; // Map size -> variant
 
@@ -48,12 +75,15 @@ public class ProductDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_product_detail);
 
+        initAuthViewModel();
         initViews();
         getProductData();
-        setupSizeButtons();
         setupQuantityControls();
         setupClickListeners();
         updateTotalPrice();
+        
+        // Initialize API service
+        apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
     }
 
     private void initViews() {
@@ -69,13 +99,29 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvQuantity = findViewById(R.id.tvQuantity);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
         
-        btnSizeSmall = findViewById(R.id.btnSizeSmall);
-        btnSizeMedium = findViewById(R.id.btnSizeMedium);
-        btnSizeLarge = findViewById(R.id.btnSizeLarge);
+        View btnOpenCustomize = findViewById(R.id.btnOpenCustomize);
+        btnOpenCustomize.setOnClickListener(v -> showCustomizationDialog());
         
         btnDecreaseQty = findViewById(R.id.btnDecreaseQty);
         btnIncreaseQty = findViewById(R.id.btnIncreaseQty);
         btnAddToCart = findViewById(R.id.btnAddToCart);
+        
+        // Temperature buttons
+        btnTempHot = findViewById(R.id.btnTempHot);
+        btnTempColdBrew = findViewById(R.id.btnTempColdBrew);
+        btnTempIce = findViewById(R.id.btnTempIce);
+        
+        // Sweetness buttons
+        btnSweetnessSweet = findViewById(R.id.btnSweetnessSweet);
+        btnSweetnessNormal = findViewById(R.id.btnSweetnessNormal);
+        btnSweetnessLess = findViewById(R.id.btnSweetnessLess);
+        btnSweetnessNoSugar = findViewById(R.id.btnSweetnessNoSugar);
+        
+        // Milk type buttons
+        btnMilkDairy = findViewById(R.id.btnMilkDairy);
+        btnMilkCondensed = findViewById(R.id.btnMilkCondensed);
+        btnMilkPlant = findViewById(R.id.btnMilkPlant);
+        btnMilkNone = findViewById(R.id.btnMilkNone);
     }
 
     private void getProductData() {
@@ -135,41 +181,292 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void setupSizeButtons() {
-        // Set Medium as default
-        btnSizeMedium.setSelected(true);
+    
+    private void setupTemperatureButtons() {
+        // Set Hot as default
+        btnTempHot.setSelected(true);
         
-        // Enable/disable buttons based on available variants
-        if (variantMap != null) {
-            btnSizeSmall.setEnabled(variantMap.containsKey("S"));
-            btnSizeMedium.setEnabled(variantMap.containsKey("M"));
-            btnSizeLarge.setEnabled(variantMap.containsKey("L"));
-        }
-        
-        btnSizeSmall.setOnClickListener(v -> selectSize("S", btnSizeSmall));
-        btnSizeMedium.setOnClickListener(v -> selectSize("M", btnSizeMedium));
-        btnSizeLarge.setOnClickListener(v -> selectSize("L", btnSizeLarge));
+        btnTempHot.setOnClickListener(v -> selectTemperature(0, btnTempHot)); // 0=Hot
+        btnTempColdBrew.setOnClickListener(v -> selectTemperature(1, btnTempColdBrew)); // 1=ColdBrew
+        btnTempIce.setOnClickListener(v -> selectTemperature(2, btnTempIce)); // 2=Ice
     }
-
-    private void selectSize(String size, TextView button) {
-        selectedSize = size;
+    
+    private void selectTemperature(int temperature, TextView button) {
+        selectedTemperature = temperature;
         
         // Reset all buttons
-        btnSizeSmall.setSelected(false);
-        btnSizeMedium.setSelected(false);
-        btnSizeLarge.setSelected(false);
+        btnTempHot.setSelected(false);
+        btnTempColdBrew.setSelected(false);
+        btnTempIce.setSelected(false);
         
         // Select clicked button
         button.setSelected(true);
+        Log.d(TAG, "Selected temperature: " + temperature);
+    }
+    
+    private void setupSweetnessButtons() {
+        // Set Normal as default
+        btnSweetnessNormal.setSelected(true);
         
-        // Update price based on selected variant
-        if (variantMap != null && variantMap.containsKey(size)) {
-            productPrice = variantMap.get(size).getBasePrice();
-            tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
-            Log.d(TAG, "Selected size " + size + " with price: " + productPrice);
-        }
+        btnSweetnessSweet.setOnClickListener(v -> selectSweetness(0, btnSweetnessSweet)); // 0=Sweet
+        btnSweetnessNormal.setOnClickListener(v -> selectSweetness(1, btnSweetnessNormal)); // 1=Normal
+        btnSweetnessLess.setOnClickListener(v -> selectSweetness(2, btnSweetnessLess)); // 2=Less
+        btnSweetnessNoSugar.setOnClickListener(v -> selectSweetness(3, btnSweetnessNoSugar)); // 3=NoSugar
+    }
+    
+    private void selectSweetness(int sweetness, TextView button) {
+        selectedSweetness = sweetness;
         
-        updateTotalPrice();
+        // Reset all buttons
+        btnSweetnessSweet.setSelected(false);
+        btnSweetnessNormal.setSelected(false);
+        btnSweetnessLess.setSelected(false);
+        btnSweetnessNoSugar.setSelected(false);
+        
+        // Select clicked button
+        button.setSelected(true);
+        Log.d(TAG, "Selected sweetness: " + sweetness);
+    }
+    
+    private void setupMilkTypeButtons() {
+        // Set Dairy as default
+        btnMilkDairy.setSelected(true);
+        
+        btnMilkDairy.setOnClickListener(v -> selectMilkType(0, btnMilkDairy)); // 0=Dairy
+        btnMilkCondensed.setOnClickListener(v -> selectMilkType(1, btnMilkCondensed)); // 1=Condensed
+        btnMilkPlant.setOnClickListener(v -> selectMilkType(2, btnMilkPlant)); // 2=Plant
+        btnMilkNone.setOnClickListener(v -> selectMilkType(3, btnMilkNone)); // 3=None
+    }
+    
+    private void selectMilkType(int milkType, TextView button) {
+        selectedMilkType = milkType;
+        
+        // Reset all buttons
+        btnMilkDairy.setSelected(false);
+        btnMilkCondensed.setSelected(false);
+        btnMilkPlant.setSelected(false);
+        btnMilkNone.setSelected(false);
+        
+        // Select clicked button
+        button.setSelected(true);
+        Log.d(TAG, "Selected milk type: " + milkType);
+    }
+
+    
+    private void showCustomizationDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_customize_order);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Set dialog width to 90% of screen width
+        android.view.WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+        params.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+        dialog.getWindow().setAttributes(params);
+        
+        // Get dialog views - Size
+        View btnDialogSizeSmall = dialog.findViewById(R.id.btnDialogSizeSmall);
+        View btnDialogSizeMedium = dialog.findViewById(R.id.btnDialogSizeMedium);
+        View btnDialogSizeLarge = dialog.findViewById(R.id.btnDialogSizeLarge);
+        ImageView checkSizeSmall = dialog.findViewById(R.id.checkSizeSmall);
+        ImageView checkSizeMedium = dialog.findViewById(R.id.checkSizeMedium);
+        ImageView checkSizeLarge = dialog.findViewById(R.id.checkSizeLarge);
+        
+        // Temperature
+        View btnDialogTempHot = dialog.findViewById(R.id.btnDialogTempHot);
+        View btnDialogTempColdBrew = dialog.findViewById(R.id.btnDialogTempColdBrew);
+        View btnDialogTempIce = dialog.findViewById(R.id.btnDialogTempIce);
+        ImageView checkTempHot = dialog.findViewById(R.id.checkTempHot);
+        ImageView checkTempColdBrew = dialog.findViewById(R.id.checkTempColdBrew);
+        ImageView checkTempIce = dialog.findViewById(R.id.checkTempIce);
+        
+        View btnDialogSweetnessSweet = dialog.findViewById(R.id.btnDialogSweetnessSweet);
+        View btnDialogSweetnessNormal = dialog.findViewById(R.id.btnDialogSweetnessNormal);
+        View btnDialogSweetnessLess = dialog.findViewById(R.id.btnDialogSweetnessLess);
+        View btnDialogSweetnessNoSugar = dialog.findViewById(R.id.btnDialogSweetnessNoSugar);
+        ImageView checkSweetnessSweet = dialog.findViewById(R.id.checkSweetnessSweet);
+        ImageView checkSweetnessNormal = dialog.findViewById(R.id.checkSweetnessNormal);
+        ImageView checkSweetnessLess = dialog.findViewById(R.id.checkSweetnessLess);
+        ImageView checkSweetnessNoSugar = dialog.findViewById(R.id.checkSweetnessNoSugar);
+        
+        View btnDialogMilkDairy = dialog.findViewById(R.id.btnDialogMilkDairy);
+        View btnDialogMilkCondensed = dialog.findViewById(R.id.btnDialogMilkCondensed);
+        View btnDialogMilkPlant = dialog.findViewById(R.id.btnDialogMilkPlant);
+        View btnDialogMilkNone = dialog.findViewById(R.id.btnDialogMilkNone);
+        ImageView checkMilkDairy = dialog.findViewById(R.id.checkMilkDairy);
+        ImageView checkMilkCondensed = dialog.findViewById(R.id.checkMilkCondensed);
+        ImageView checkMilkPlant = dialog.findViewById(R.id.checkMilkPlant);
+        ImageView checkMilkNone = dialog.findViewById(R.id.checkMilkNone);
+        
+        TextView tvDialogQuantity = dialog.findViewById(R.id.tvDialogQuantity);
+        ImageView btnDialogDecreaseQty = dialog.findViewById(R.id.btnDialogDecreaseQty);
+        ImageView btnDialogIncreaseQty = dialog.findViewById(R.id.btnDialogIncreaseQty);
+        
+        com.google.android.material.button.MaterialButton btnDialogCancel = dialog.findViewById(R.id.btnDialogCancel);
+        com.google.android.material.button.MaterialButton btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
+        
+        // Set current selections - Size
+        checkSizeSmall.setSelected(selectedSize.equals("S"));
+        checkSizeMedium.setSelected(selectedSize.equals("M"));
+        checkSizeLarge.setSelected(selectedSize.equals("L"));
+        
+        // Temperature
+        checkTempHot.setSelected(selectedTemperature == 0);
+        checkTempColdBrew.setSelected(selectedTemperature == 1);
+        checkTempIce.setSelected(selectedTemperature == 2);
+        
+        checkSweetnessSweet.setSelected(selectedSweetness == 0);
+        checkSweetnessNormal.setSelected(selectedSweetness == 1);
+        checkSweetnessLess.setSelected(selectedSweetness == 2);
+        checkSweetnessNoSugar.setSelected(selectedSweetness == 3);
+        
+        checkMilkDairy.setSelected(selectedMilkType == 0);
+        checkMilkCondensed.setSelected(selectedMilkType == 1);
+        checkMilkPlant.setSelected(selectedMilkType == 2);
+        checkMilkNone.setSelected(selectedMilkType == 3);
+        
+        tvDialogQuantity.setText(String.valueOf(quantity));
+        
+        // Size listeners
+        btnDialogSizeSmall.setOnClickListener(v -> {
+            selectedSize = "S";
+            checkSizeSmall.setSelected(true);
+            checkSizeMedium.setSelected(false);
+            checkSizeLarge.setSelected(false);
+            if (variantMap != null && variantMap.containsKey("S")) {
+                productPrice = variantMap.get("S").getBasePrice();
+                tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
+                updateTotalPrice();
+            }
+        });
+        btnDialogSizeMedium.setOnClickListener(v -> {
+            selectedSize = "M";
+            checkSizeSmall.setSelected(false);
+            checkSizeMedium.setSelected(true);
+            checkSizeLarge.setSelected(false);
+            if (variantMap != null && variantMap.containsKey("M")) {
+                productPrice = variantMap.get("M").getBasePrice();
+                tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
+                updateTotalPrice();
+            }
+        });
+        btnDialogSizeLarge.setOnClickListener(v -> {
+            selectedSize = "L";
+            checkSizeSmall.setSelected(false);
+            checkSizeMedium.setSelected(false);
+            checkSizeLarge.setSelected(true);
+            if (variantMap != null && variantMap.containsKey("L")) {
+                productPrice = variantMap.get("L").getBasePrice();
+                tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
+                updateTotalPrice();
+            }
+        });
+        
+        // Temperature listeners
+        btnDialogTempHot.setOnClickListener(v -> {
+            selectedTemperature = 0;
+            checkTempHot.setSelected(true);
+            checkTempColdBrew.setSelected(false);
+            checkTempIce.setSelected(false);
+        });
+        btnDialogTempColdBrew.setOnClickListener(v -> {
+            selectedTemperature = 1;
+            checkTempHot.setSelected(false);
+            checkTempColdBrew.setSelected(true);
+            checkTempIce.setSelected(false);
+        });
+        btnDialogTempIce.setOnClickListener(v -> {
+            selectedTemperature = 2;
+            checkTempHot.setSelected(false);
+            checkTempColdBrew.setSelected(false);
+            checkTempIce.setSelected(true);
+        });
+        
+        // Sweetness listeners
+        btnDialogSweetnessSweet.setOnClickListener(v -> {
+            selectedSweetness = 0;
+            checkSweetnessSweet.setSelected(true);
+            checkSweetnessNormal.setSelected(false);
+            checkSweetnessLess.setSelected(false);
+            checkSweetnessNoSugar.setSelected(false);
+        });
+        btnDialogSweetnessNormal.setOnClickListener(v -> {
+            selectedSweetness = 1;
+            checkSweetnessSweet.setSelected(false);
+            checkSweetnessNormal.setSelected(true);
+            checkSweetnessLess.setSelected(false);
+            checkSweetnessNoSugar.setSelected(false);
+        });
+        btnDialogSweetnessLess.setOnClickListener(v -> {
+            selectedSweetness = 2;
+            checkSweetnessSweet.setSelected(false);
+            checkSweetnessNormal.setSelected(false);
+            checkSweetnessLess.setSelected(true);
+            checkSweetnessNoSugar.setSelected(false);
+        });
+        btnDialogSweetnessNoSugar.setOnClickListener(v -> {
+            selectedSweetness = 3;
+            checkSweetnessSweet.setSelected(false);
+            checkSweetnessNormal.setSelected(false);
+            checkSweetnessLess.setSelected(false);
+            checkSweetnessNoSugar.setSelected(true);
+        });
+        
+        // Milk type listeners
+        btnDialogMilkDairy.setOnClickListener(v -> {
+            selectedMilkType = 0;
+            checkMilkDairy.setSelected(true);
+            checkMilkCondensed.setSelected(false);
+            checkMilkPlant.setSelected(false);
+            checkMilkNone.setSelected(false);
+        });
+        btnDialogMilkCondensed.setOnClickListener(v -> {
+            selectedMilkType = 1;
+            checkMilkDairy.setSelected(false);
+            checkMilkCondensed.setSelected(true);
+            checkMilkPlant.setSelected(false);
+            checkMilkNone.setSelected(false);
+        });
+        btnDialogMilkPlant.setOnClickListener(v -> {
+            selectedMilkType = 2;
+            checkMilkDairy.setSelected(false);
+            checkMilkCondensed.setSelected(false);
+            checkMilkPlant.setSelected(true);
+            checkMilkNone.setSelected(false);
+        });
+        btnDialogMilkNone.setOnClickListener(v -> {
+            selectedMilkType = 3;
+            checkMilkDairy.setSelected(false);
+            checkMilkCondensed.setSelected(false);
+            checkMilkPlant.setSelected(false);
+            checkMilkNone.setSelected(true);
+        });
+        
+        // Quantity listeners
+        final int[] dialogQuantity = {quantity};
+        btnDialogDecreaseQty.setOnClickListener(v -> {
+            if (dialogQuantity[0] > 1) {
+                dialogQuantity[0]--;
+                tvDialogQuantity.setText(String.valueOf(dialogQuantity[0]));
+            }
+        });
+        btnDialogIncreaseQty.setOnClickListener(v -> {
+            dialogQuantity[0]++;
+            tvDialogQuantity.setText(String.valueOf(dialogQuantity[0]));
+        });
+        
+        // Cancel button
+        btnDialogCancel.setOnClickListener(v -> dialog.dismiss());
+        
+        // Confirm button
+        btnDialogConfirm.setOnClickListener(v -> {
+            quantity = dialogQuantity[0];
+            tvQuantity.setText(String.valueOf(quantity));
+            updateTotalPrice();
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void setupQuantityControls() {
@@ -204,20 +501,151 @@ public class ProductDetailActivity extends AppCompatActivity {
         
         btnAddToCart.setOnClickListener(v -> {
             if (variantMap != null && variantMap.containsKey(selectedSize)) {
-                ProductVariant selectedVariant = variantMap.get(selectedSize);
-                String message = String.format("Added %d x %s (Size %s - %s) to cart", 
-                    quantity, productName, selectedSize, CurrencyUtils.formatPrice(productPrice));
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-                
-                Log.d(TAG, "Add to cart - Variant ID: " + selectedVariant.getId() + 
-                    ", Size: " + selectedSize + ", Quantity: " + quantity + 
-                    ", Price: " + productPrice);
-                
-                // TODO: Add to cart logic with variant ID
-                // CartItem item = new CartItem(selectedVariant.getId(), quantity);
+                createOrder();
             } else {
-                Toast.makeText(this, "Please select a size", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Vui lòng chọn size", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void initAuthViewModel() {
+        authViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new AuthViewModel(getApplication());
+            }
+        }).get(AuthViewModel.class);
+    }
+    
+    private void createOrder() {
+        if (variantMap == null || !variantMap.containsKey(selectedSize)) {
+            Toast.makeText(this, "Vui lòng chọn size", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        ProductVariant selectedVariant = variantMap.get(selectedSize);
+        String variantId = selectedVariant.getId();
+        
+        // Create OrderItem
+        OrderItem orderItem = new OrderItem(
+            variantId,
+            quantity,
+            selectedTemperature,
+            selectedSweetness,
+            selectedMilkType,
+            new ArrayList<>() // Empty array
+        );
+        
+        // Create OrderRequest
+        OrderRequest orderRequest = new OrderRequest(
+            0, // deliveryType = 0
+            Collections.singletonList(orderItem)
+        );
+        
+        // Log request details
+        Log.d(TAG, "=== ORDER REQUEST ===");
+        Log.d(TAG, "Variant ID: " + variantId);
+        Log.d(TAG, "Quantity: " + quantity);
+        Log.d(TAG, "Temperature: " + selectedTemperature);
+        Log.d(TAG, "Sweetness: " + selectedSweetness);
+        Log.d(TAG, "Milk Type: " + selectedMilkType);
+        Log.d(TAG, "Request JSON: " + new com.google.gson.Gson().toJson(orderRequest));
+        
+        // Get access token
+        String accessToken = authViewModel.getAccessToken();
+        if (accessToken.isEmpty()) {
+            Toast.makeText(this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Disable button to prevent double click
+        btnAddToCart.setEnabled(false);
+        btnAddToCart.setText("Đang xử lý...");
+        
+        // Call API
+        String bearerToken = "Bearer " + accessToken;
+        Call<ApiResponse<OrderResponse>> call = apiService.createOrder(bearerToken, orderRequest);
+        call.enqueue(new Callback<ApiResponse<OrderResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<OrderResponse>> call, Response<ApiResponse<OrderResponse>> response) {
+                btnAddToCart.setEnabled(true);
+                btnAddToCart.setText("Đặt hàng");
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<OrderResponse> apiResponse = response.body();
+                    
+                    if (apiResponse.isSuccess()) {
+                        Log.d(TAG, "Order created successfully: " + apiResponse.getData().getId());
+                        showSuccessDialog();
+                    } else {
+                        Toast.makeText(ProductDetailActivity.this, "Lỗi: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.e(TAG, "Order failed: " + response.code());
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                        Log.e(TAG, "Error body: " + errorBody);
+                        Toast.makeText(ProductDetailActivity.this, "Đặt hàng thất bại: " + response.code() + " - " + errorBody, Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(ProductDetailActivity.this, "Đặt hàng thất bại: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<OrderResponse>> call, Throwable t) {
+                btnAddToCart.setEnabled(true);
+                btnAddToCart.setText("Đặt hàng");
+                
+                Log.e(TAG, "Order API call failed: " + t.getMessage(), t);
+                Toast.makeText(ProductDetailActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void showSuccessDialog() {
+        Dialog successDialog = new Dialog(this);
+        successDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        successDialog.setContentView(R.layout.dialog_success);
+        successDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Set dialog width and animation
+        android.view.WindowManager.LayoutParams params = successDialog.getWindow().getAttributes();
+        params.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
+        successDialog.getWindow().setAttributes(params);
+        successDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        
+        // Get views
+        ImageView ivSuccessIcon = successDialog.findViewById(R.id.ivSuccessIcon);
+        com.google.android.material.button.MaterialButton btnOk = successDialog.findViewById(R.id.btnOk);
+        
+        // Start animations
+        android.view.animation.Animation scaleUp = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.scale_up);
+        ivSuccessIcon.startAnimation(scaleUp);
+        
+        // OK button listener
+        btnOk.setOnClickListener(v -> {
+            successDialog.dismiss();
+            // Navigate to MenuActivity (Home)
+            Intent intent = new Intent(ProductDetailActivity.this, MenuActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+        
+        // Auto dismiss after 2 seconds
+        new android.os.Handler().postDelayed(() -> {
+            if (successDialog.isShowing()) {
+                successDialog.dismiss();
+                // Navigate to MenuActivity (Home)
+                Intent intent = new Intent(ProductDetailActivity.this, MenuActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        }, 2000);
+        
+        successDialog.show();
     }
 }

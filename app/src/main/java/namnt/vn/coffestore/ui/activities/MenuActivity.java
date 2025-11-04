@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +51,7 @@ public class MenuActivity extends AppCompatActivity {
     private EditText etSearch;
     private Spinner spinnerOrigin, spinnerRoastLevel, spinnerBrewMethod;
     private RecyclerView rvCoffeeList;
+    private LinearLayout emptyStateLayout;
     private com.google.android.material.navigation.NavigationView navigationView;
     
     private MenuAdapter menuAdapter;
@@ -104,6 +106,7 @@ public class MenuActivity extends AppCompatActivity {
         spinnerRoastLevel = findViewById(R.id.spinnerRoastLevel);
         spinnerBrewMethod = findViewById(R.id.spinnerBrewMethod);
         rvCoffeeList = findViewById(R.id.rvCoffeeList);
+        emptyStateLayout = findViewById(R.id.emptyStateLayout);
         navigationView = findViewById(R.id.navigationView);
     }
 
@@ -255,6 +258,15 @@ public class MenuActivity extends AppCompatActivity {
             if (matchSearch && matchOrigin && matchRoast && matchBrew) {
                 filteredList.add(item);
             }
+        }
+        
+        // Show/hide empty state
+        if (filteredList.isEmpty()) {
+            emptyStateLayout.setVisibility(View.VISIBLE);
+            rvCoffeeList.setVisibility(View.GONE);
+        } else {
+            emptyStateLayout.setVisibility(View.GONE);
+            rvCoffeeList.setVisibility(View.VISIBLE);
         }
         
         menuAdapter.setCoffeeList(filteredList);
@@ -453,22 +465,34 @@ public class MenuActivity extends AppCompatActivity {
     }
     
     private void setupRoastLevelSpinner() {
+        // Always use enum values (fixed list)
+        List<String> roastLevelData = getRoastLevelEnumValues();
+        
+        // Convert to Vietnamese for display
+        List<String> roastLevelVietnamese = new ArrayList<>();
+        for (String enumName : roastLevelData) {
+            roastLevelVietnamese.add(roastLevelToVietnamese(enumName));
+        }
+        
         List<String> roastLevelOptions = new ArrayList<>();
         roastLevelOptions.add("Tất cả độ rang");
-        roastLevelOptions.addAll(availableRoastLevels);
+        roastLevelOptions.addAll(roastLevelVietnamese);
         
         ArrayAdapter<String> roastAdapter = new ArrayAdapter<>(this, 
             android.R.layout.simple_spinner_item, roastLevelOptions);
         roastAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRoastLevel.setAdapter(roastAdapter);
         
+        final List<String> finalRoastLevelData = roastLevelData;
+        final List<String> finalRoastLevelVietnamese = roastLevelVietnamese;
         spinnerRoastLevel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
                     currentRoastLevelFilter = null; // All roast levels
                 } else {
-                    currentRoastLevelFilter = availableRoastLevels.get(position - 1);
+                    // Use enum name for filtering, not Vietnamese
+                    currentRoastLevelFilter = finalRoastLevelData.get(position - 1);
                 }
                 Log.d(TAG, "Roast level filter changed to: " + currentRoastLevelFilter);
                 filterCoffee();
@@ -482,22 +506,34 @@ public class MenuActivity extends AppCompatActivity {
     }
     
     private void setupBrewMethodSpinner() {
+        // Always use enum values (fixed list)
+        List<String> brewMethodData = getBrewMethodEnumValues();
+        
+        // Convert to Vietnamese for display
+        List<String> brewMethodVietnamese = new ArrayList<>();
+        for (String enumName : brewMethodData) {
+            brewMethodVietnamese.add(brewMethodToVietnamese(enumName));
+        }
+        
         List<String> brewMethodOptions = new ArrayList<>();
         brewMethodOptions.add("Tất cả phương pháp");
-        brewMethodOptions.addAll(availableBrewMethods);
+        brewMethodOptions.addAll(brewMethodVietnamese);
         
         ArrayAdapter<String> brewAdapter = new ArrayAdapter<>(this, 
             android.R.layout.simple_spinner_item, brewMethodOptions);
         brewAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerBrewMethod.setAdapter(brewAdapter);
         
+        final List<String> finalBrewMethodData = brewMethodData;
+        final List<String> finalBrewMethodVietnamese = brewMethodVietnamese;
         spinnerBrewMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
                     currentBrewMethodFilter = null; // All brew methods
                 } else {
-                    currentBrewMethodFilter = availableBrewMethods.get(position - 1);
+                    // Use enum name for filtering, not Vietnamese
+                    currentBrewMethodFilter = finalBrewMethodData.get(position - 1);
                 }
                 Log.d(TAG, "Brew method filter changed to: " + currentBrewMethodFilter);
                 filterCoffee();
@@ -596,6 +632,53 @@ public class MenuActivity extends AppCompatActivity {
         });
     }
 
+    // Helper methods to get enum values
+    private List<String> getRoastLevelEnumValues() {
+        List<String> values = new ArrayList<>();
+        for (RoastLevel level : RoastLevel.values()) {
+            values.add(level.name()); // Light, Medium, Dark (match BE)
+        }
+        return values;
+    }
+    
+    private List<String> getBrewMethodEnumValues() {
+        List<String> values = new ArrayList<>();
+        for (BrewMethod method : BrewMethod.values()) {
+            values.add(method.name()); // Espresso, Phin, PourOver, ColdBrew (match BE)
+        }
+        return values;
+    }
+    
+    // Convert enum name to Vietnamese display name
+    private String roastLevelToVietnamese(String enumName) {
+        RoastLevel level = RoastLevel.fromString(enumName);
+        return level != null ? level.getVietnameseName() : enumName;
+    }
+    
+    private String brewMethodToVietnamese(String enumName) {
+        BrewMethod method = BrewMethod.fromString(enumName);
+        return method != null ? method.getVietnameseName() : enumName;
+    }
+    
+    // Convert Vietnamese back to enum name for filtering
+    private String vietnameseToRoastLevel(String vietnamese) {
+        for (RoastLevel level : RoastLevel.values()) {
+            if (level.getVietnameseName().equals(vietnamese)) {
+                return level.name();
+            }
+        }
+        return vietnamese;
+    }
+    
+    private String vietnameseToBrewMethod(String vietnamese) {
+        for (BrewMethod method : BrewMethod.values()) {
+            if (method.getVietnameseName().equals(vietnamese)) {
+                return method.name();
+            }
+        }
+        return vietnamese;
+    }
+    
     private void redirectToLogin() {
         Intent intent = new Intent(this, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

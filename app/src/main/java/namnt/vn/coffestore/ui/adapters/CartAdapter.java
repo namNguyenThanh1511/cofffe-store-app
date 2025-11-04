@@ -62,7 +62,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     static class CartViewHolder extends RecyclerView.ViewHolder {
         private ImageView ivCartItemImage, btnDecreaseQty, btnIncreaseQty, btnRemoveItem;
-        private TextView tvCartItemName, tvCartItemSize, tvCartItemPrice, tvCartItemQty;
+        private TextView tvCartItemName, tvCartItemSize, tvCartItemCustomization, tvCartItemPrice, tvCartItemQty;
 
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -74,15 +74,43 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             
             tvCartItemName = itemView.findViewById(R.id.tvCartItemName);
             tvCartItemSize = itemView.findViewById(R.id.tvCartItemSize);
+            tvCartItemCustomization = itemView.findViewById(R.id.tvCartItemCustomization);
             tvCartItemPrice = itemView.findViewById(R.id.tvCartItemPrice);
             tvCartItemQty = itemView.findViewById(R.id.tvCartItemQty);
         }
 
         public void bind(CartItem item, OnCartItemListener listener) {
             tvCartItemName.setText(item.getName());
-            tvCartItemSize.setText(item.getSize());
+            
+            // Format size display
+            String rawSize = item.getSize();
+            android.util.Log.d("CartAdapter", "Raw size: '" + rawSize + "' (null=" + (rawSize == null) + ")");
+            String sizeText = getSizeText(rawSize);
+            tvCartItemSize.setText("Size: " + sizeText);
+            
             tvCartItemPrice.setText(CurrencyUtils.formatPrice(item.getTotal()));
             tvCartItemQty.setText(String.valueOf(item.getQuantity()));
+
+            // Build customization text
+            StringBuilder customization = new StringBuilder();
+            if (item.getTemperatureText() != null && !item.getTemperatureText().isEmpty()) {
+                customization.append(item.getTemperatureText());
+            }
+            if (item.getSweetnessText() != null && !item.getSweetnessText().isEmpty()) {
+                if (customization.length() > 0) customization.append(" • ");
+                customization.append(item.getSweetnessText());
+            }
+            if (item.getMilkTypeText() != null && !item.getMilkTypeText().isEmpty()) {
+                if (customization.length() > 0) customization.append(" • ");
+                customization.append(item.getMilkTypeText());
+            }
+            
+            if (customization.length() > 0) {
+                tvCartItemCustomization.setText(customization.toString());
+                tvCartItemCustomization.setVisibility(View.VISIBLE);
+            } else {
+                tvCartItemCustomization.setVisibility(View.GONE);
+            }
 
             // Load image
             if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
@@ -117,6 +145,26 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                     listener.onItemRemoved(item);
                 }
             });
+        }
+        
+        private String getSizeText(String size) {
+            if (size == null || size.isEmpty()) {
+                return "Chưa chọn";
+            }
+            
+            switch (size.toUpperCase()) {
+                case "S":
+                case "SMALL":
+                    return "Nhỏ";
+                case "M":
+                case "MEDIUM":
+                    return "Vừa";
+                case "L":
+                case "LARGE":
+                    return "Lớn";
+                default:
+                    return size;
+            }
         }
     }
 }

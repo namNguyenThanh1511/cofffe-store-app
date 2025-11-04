@@ -1,11 +1,9 @@
 package namnt.vn.coffestore.data.model;
 
 public enum RoastLevel {
-    LIGHT("Light Roast", "Nhẹ"),
-    MEDIUM("Medium Roast", "Vừa"),
-    MEDIUM_DARK("Medium Dark Roast", "Vừa Đậm"),
-    DARK("Dark Roast", "Đậm"),
-    EXTRA_DARK("Extra Dark Roast", "Rất Đậm");
+    Light("Light", "Nhẹ"),
+    Medium("Medium", "Vừa"),
+    Dark("Dark", "Đậm");
 
     private final String englishName;
     private final String vietnameseName;
@@ -24,7 +22,7 @@ public enum RoastLevel {
     }
 
     public String getDisplayName() {
-        return vietnameseName + " (" + englishName + ")";
+        return vietnameseName;
     }
 
     public static RoastLevel fromString(String value) {

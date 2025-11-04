@@ -5,6 +5,8 @@ import namnt.vn.coffestore.data.model.api.ApiResponse;
 import namnt.vn.coffestore.data.model.auth.LoginRequest;
 import namnt.vn.coffestore.data.model.auth.RegisterRequest;
 import namnt.vn.coffestore.data.model.auth.TokenResponse;
+import namnt.vn.coffestore.data.model.order.OrderRequest;
+import namnt.vn.coffestore.data.model.order.OrderResponse;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -35,4 +37,15 @@ public interface ApiService {
     
     @GET("api/products/{id}")
     Call<ApiResponse<Product>> getProductById(@Path("id") String productId);
+    
+    @POST("api/orders")
+    Call<ApiResponse<OrderResponse>> createOrder(
+        @Header("Authorization") String bearerToken,
+        @Body OrderRequest orderRequest
+    );
+    
+    @GET("api/orders")
+    Call<ApiResponse<List<OrderResponse>>> getOrders(
+        @Header("Authorization") String bearerToken
+    );
 }

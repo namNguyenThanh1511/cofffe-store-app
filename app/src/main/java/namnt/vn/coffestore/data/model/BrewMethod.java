@@ -1,14 +1,10 @@
 package namnt.vn.coffestore.data.model;
 
 public enum BrewMethod {
-    ESPRESSO("Espresso", "Ép"),
-    DRIP("Drip", "Nhỏ giọt"),
-    FRENCH_PRESS("French Press", "Phin Pháp"),
-    POUR_OVER("Pour Over", "Rót"),
-    COLD_BREW("Cold Brew", "Pha lạnh"),
-    AEROPRESS("AeroPress", "AeroPress"),
-    VIETNAMESE("Vietnamese", "Phin Việt Nam"),
-    MOKA_POT("Moka Pot", "Ấm Moka");
+    Espresso("Espresso", "Espresso"),
+    Phin("Phin", "Phin"),
+    PourOver("Pour Over", "Pour Over"),
+    ColdBrew("Cold Brew", "Pha lạnh");
 
     private final String englishName;
     private final String vietnameseName;
@@ -27,7 +23,7 @@ public enum BrewMethod {
     }
 
     public String getDisplayName() {
-        return vietnameseName + " (" + englishName + ")";
+        return vietnameseName;
     }
 
     public static BrewMethod fromString(String value) {
