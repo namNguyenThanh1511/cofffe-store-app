@@ -7,11 +7,13 @@ import namnt.vn.coffestore.data.model.auth.TokenResponse;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
 public interface ApiService {
+
     @POST("api/auth/register")
     Call<ApiResponse<String>> register(@Body RegisterRequest request);
 
@@ -24,4 +26,8 @@ public interface ApiService {
     @Headers("Content-Type: text/plain")
     @POST("api/auth/refresh-token")
     Call<ApiResponse<TokenResponse>> refreshToken(@Body RequestBody refreshToken);
+
+    // Server đang trả text/plain -> nhận String rồi tự parse
+    @GET("api/auth/profile")
+    Call<String> getProfile(@Header("Authorization") String bearerToken);
 }

@@ -16,6 +16,7 @@
     <string name="menu_home">Trang chủ</string>
     <string name="menu_logout">Đăng xuất</string>
     <string name="menu_map">Map</string>
+    <string name="menu_profile">Profile</string>
 
 
     <!-- Product Detail -->

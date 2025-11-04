@@ -59,5 +59,6 @@ dependencies {
     implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.osmdroid:osmdroid-android:6.1.16")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
 }

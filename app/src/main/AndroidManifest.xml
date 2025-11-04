@@ -39,6 +39,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.activities.UserProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CoffeeStore.NoActionBar" />
+
         <!-- Login & Register -->
         <activity
             android:name=".ui.activities.LoginActivity"
