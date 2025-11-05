@@ -9,7 +9,14 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.POST;
+import java.util.List;
+
+import namnt.vn.coffestore.data.model.chat.ChatConversation;
+import namnt.vn.coffestore.data.model.chat.ChatMessage;
+import namnt.vn.coffestore.data.model.chat.SendMessageRequest;
 
 public interface ApiService {
     @POST("api/auth/register")
@@ -24,4 +31,20 @@ public interface ApiService {
     @Headers("Content-Type: text/plain")
     @POST("api/auth/refresh-token")
     Call<ApiResponse<TokenResponse>> refreshToken(@Body RequestBody refreshToken);
+
+    // Chat APIs
+    @POST("api/chats/conversation/customer")
+    Call<ApiResponse<ChatConversation>> createConversationForCustomer(@Header("Authorization") String bearer);
+
+    @GET("api/chats/user/{userId}")
+    Call<ApiResponse<List<ChatConversation>>> getUserConversations(@Header("Authorization") String bearer,
+                                                                   @Path("userId") String userId);
+
+    @GET("api/chats/{conversationId}/messages")
+    Call<ApiResponse<List<ChatMessage>>> getConversationMessages(@Header("Authorization") String bearer,
+                                                                 @Path("conversationId") long conversationId);
+
+    @POST("api/chats/send")
+    Call<ApiResponse<ChatMessage>> sendMessage(@Header("Authorization") String bearer,
+                                               @Body SendMessageRequest request);
 }

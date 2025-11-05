@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:orientation="horizontal"
+    android:paddingStart="60dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/text_secondary_light"
+                android:textSize="11sp"
+                android:text="10:30 AM"/>
+
+            <TextView
+                android:id="@+id/tvMessageOutgoing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_message_outgoing"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:maxWidth="240dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

@@ -101,7 +101,124 @@ public class AuthRepository {
         if (token.getRefreshTokenExpiry() != null) {
             editor.putLong("refresh_expiry", token.getRefreshTokenExpiry().getTime());
         }
+        
+        // Extract userId from JWT token
+        String userId = extractUserIdFromToken(token.getAccessToken());
+        if (!TextUtils.isEmpty(userId)) {
+            editor.putString("user_id", userId);
+            android.util.Log.d("AuthRepository", "Saved userId from token: " + userId);
+        }
+        
+        // Extract role from JWT token
+        String roleStr = extractRoleFromToken(token.getAccessToken());
+        if (!TextUtils.isEmpty(roleStr)) {
+            // Map role string to index: Customer=0, Admin=1, Barista=2
+            int roleIdx = 0; // Default to Customer
+            String roleLower = roleStr.toLowerCase();
+            if (roleLower.contains("admin")) {
+                roleIdx = 1;
+            } else if (roleLower.contains("barista")) {
+                roleIdx = 2;
+            }
+            editor.putInt("user_role", roleIdx);
+            android.util.Log.d("AuthRepository", "Saved role from token: " + roleStr + " -> roleIdx: " + roleIdx);
+        }
+        
         editor.apply();
+    }
+    
+    /**
+     * Extract userId from JWT token payload
+     * JWT format: header.payload.signature
+     */
+    private String extractUserIdFromToken(String token) {
+        if (TextUtils.isEmpty(token)) return "";
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return "";
+            
+            // Decode payload (base64)
+            String payload = parts[1];
+            // Add padding if needed
+            while (payload.length() % 4 != 0) {
+                payload += "=";
+            }
+            
+            byte[] decodedBytes = android.util.Base64.decode(payload, android.util.Base64.DEFAULT);
+            String payloadJson = new String(decodedBytes, "UTF-8");
+            
+            // Parse JSON to get userId (try common field names)
+            org.json.JSONObject json = new org.json.JSONObject(payloadJson);
+            
+            // Try different possible field names
+            if (json.has("userId")) {
+                return json.getString("userId");
+            } else if (json.has("user_id")) {
+                return json.getString("user_id");
+            } else if (json.has("sub")) {
+                return json.getString("sub"); // JWT standard subject claim
+            } else if (json.has("nameid")) {
+                return json.getString("nameid"); // .NET JWT often uses nameid
+            } else if (json.has("id")) {
+                return json.getString("id");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("AuthRepository", "Failed to extract userId from token: " + e.getMessage());
+        }
+        return "";
+    }
+    
+    /**
+     * Extract role from JWT token payload
+     * JWT format: header.payload.signature
+     */
+    private String extractRoleFromToken(String token) {
+        if (TextUtils.isEmpty(token)) return "";
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return "";
+            
+            // Decode payload (base64)
+            String payload = parts[1];
+            // Add padding if needed
+            while (payload.length() % 4 != 0) {
+                payload += "=";
+            }
+            
+            byte[] decodedBytes = android.util.Base64.decode(payload, android.util.Base64.DEFAULT);
+            String payloadJson = new String(decodedBytes, "UTF-8");
+            
+            // Parse JSON to get role (try common field names)
+            org.json.JSONObject json = new org.json.JSONObject(payloadJson);
+            
+            // Try different possible field names
+            if (json.has("role")) {
+                return json.getString("role");
+            } else if (json.has("Role")) {
+                return json.getString("Role");
+            } else if (json.has("userRole")) {
+                return json.getString("userRole");
+            } else if (json.has("user_role")) {
+                return json.getString("user_role");
+            } else if (json.has("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")) {
+                // .NET JWT often uses this claim
+                Object roleObj = json.get("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+                if (roleObj instanceof String) {
+                    return (String) roleObj;
+                } else if (roleObj instanceof org.json.JSONArray) {
+                    org.json.JSONArray arr = (org.json.JSONArray) roleObj;
+                    if (arr.length() > 0) {
+                        return arr.getString(0);
+                    }
+                }
+            }
+            
+            // Log full payload for debugging
+            android.util.Log.d("AuthRepository", "JWT payload: " + payloadJson);
+        } catch (Exception e) {
+            android.util.Log.e("AuthRepository", "Failed to extract role from token: " + e.getMessage());
+        }
+        return "";
     }
 
     // Helper: Lấy access token hiện tại

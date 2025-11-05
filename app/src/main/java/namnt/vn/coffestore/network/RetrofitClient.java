@@ -3,6 +3,10 @@ package namnt.vn.coffestore.network;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.Date;
+
+import namnt.vn.coffestore.utils.FlexibleDateDeserializer;
+
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
@@ -63,8 +67,10 @@ public class RetrofitClient {
                         .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))  // Log API calls để debug
                         .build();
 
+                // Use custom Date deserializer to handle various ISO 8601 formats
+                // including microseconds (7 digits) and missing timezone
                 Gson gson = new GsonBuilder()
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+                        .registerTypeAdapter(Date.class, new FlexibleDateDeserializer())
                         .create();
 
                 retrofit = new Retrofit.Builder()

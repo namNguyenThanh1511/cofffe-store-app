@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/chatHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp">
+
+        <!-- Back button (shown when viewing messages) -->
+        <ImageView
+            android:id="@+id/btnBackToConversations"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back to conversations"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/tvChatTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/text_white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="Chat"/>
+    </LinearLayout>
+
+    <!-- Conversation list for Barista/Admin -->
+    <LinearLayout
+        android:id="@+id/containerConversationList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Conversations"
+            android:textColor="@color/text_secondary_light"
+            android:textSize="12sp"
+            android:paddingBottom="4dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvConversations"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:overScrollMode="never"/>
+    </LinearLayout>
+
+    <!-- Start chat button for Customer -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartChat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Chat with Barista"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/btn_login_bg"
+        android:textColor="@color/text_white"
+        android:visibility="gone"/>
+
+    <!-- Messages (shown when conversation is selected) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone"/>
+
+    <!-- Input bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_search"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Type a message"
+            android:textColor="@color/text_white"
+            android:textColorHint="@color/text_secondary_light"/>
+
+        <ImageView
+            android:id="@+id/btnSend"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_send"
+            android:contentDescription="Send"/>
+    </LinearLayout>
+
+</LinearLayout>
+
+

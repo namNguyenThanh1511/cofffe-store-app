@@ -87,6 +87,9 @@ public class RegisterActivity extends AppCompatActivity {
                     return;
             }
 
+            // Save role locally for demo chat behavior
+            getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().putInt("user_role", roleInt).apply();
+
             RegisterRequest request = new RegisterRequest(fullName, email, phone, password, roleInt);
             viewModel.register(request);
         });

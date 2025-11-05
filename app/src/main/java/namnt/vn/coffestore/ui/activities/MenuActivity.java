@@ -237,19 +237,26 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void setupNavigationDrawer() {
-        if (navigationView == null) {
-            return;
-        }
-
+        if (navigationView == null) return;
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                drawerLayout.closeDrawers();
+                return true;
+            }
+            if (id == R.id.nav_profile) {
+                drawerLayout.closeDrawers();
+                // TODO: open profile screen if available
+                return true;
+            }
+            if (id == R.id.nav_messages) {
+                drawerLayout.closeDrawers();
+                startActivity(new Intent(this, ChatActivity.class));
+                return true;
+            }
             if (id == R.id.nav_logout) {
                 drawerLayout.closeDrawers();
                 authViewModel.logout();
-                return true;
-            }
-            if (id == R.id.nav_home) {
-                drawerLayout.closeDrawers();
                 return true;
             }
             return false;

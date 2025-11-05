@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingEnd="60dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <!-- Avatar (optional, can hide if not needed) -->
+    <ImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_avatar"
+        android:padding="6dp"
+        android:src="@drawable/ic_person"
+        android:visibility="gone"
+        android:contentDescription="Avatar" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvSenderName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary_light"
+            android:textSize="12sp"
+            android:text="Shop"
+            android:visibility="gone"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="start">
+
+            <TextView
+                android:id="@+id/tvMessageIncoming"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_message_incoming"
+                android:padding="12dp"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:maxWidth="240dp"/>
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/text_secondary_light"
+                android:textSize="11sp"
+                android:text="10:30 AM"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

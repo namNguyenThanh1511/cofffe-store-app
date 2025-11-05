@@ -13,8 +13,10 @@
     <string name="no_image">Chưa có ảnh</string>
 
     <!-- Navigation -->
-    <string name="menu_home">Trang chủ</string>
-    <string name="menu_logout">Đăng xuất</string>
+    <string name="menu_home">Home</string>
+    <string name="menu_profile">Profile</string>
+    <string name="menu_messages">Messages</string>
+    <string name="menu_logout">Logout</string>
     
     <!-- Product Detail -->
     <string name="coffee_size">Coffee Size</string>
