@@ -48,4 +48,12 @@ public interface ApiService {
     Call<ApiResponse<List<OrderResponse>>> getOrders(
         @Header("Authorization") String bearerToken
     );
+    
+    @GET("api/addons")
+    Call<ApiResponse<List<namnt.vn.coffestore.data.model.Addon>>> getAddons();
+    
+    @GET("api/auth/profile")
+    Call<ApiResponse<namnt.vn.coffestore.data.model.UserProfile>> getUserProfile(
+        @Header("Authorization") String bearerToken
+    );
 }

@@ -494,6 +494,17 @@
                 android:lineSpacingExtra="4dp"
                 android:visibility="gone" />
 
+            <!-- Selected Addons Display -->
+            <TextView
+                android:id="@+id/tvSelectedAddons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text=""
+                android:textColor="@color/coffee_accent"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
             <!-- Add to Cart Button -->
             <LinearLayout
                 android:layout_width="match_parent"

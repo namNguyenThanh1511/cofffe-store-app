@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import namnt.vn.coffestore.R;
+import namnt.vn.coffestore.data.model.Addon;
 import namnt.vn.coffestore.data.model.ProductVariant;
 import namnt.vn.coffestore.data.model.api.ApiResponse;
 import namnt.vn.coffestore.data.model.order.OrderItem;
@@ -49,7 +51,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private ImageView ivProductImage, btnBack, btnFavorite;
     private ImageView btnDecreaseQty, btnIncreaseQty;
     private TextView tvProductName, tvDescription, tvAbout;
-    private TextView tvPrice, tvOldPrice, tvQuantity, tvTotalPrice;
+    private TextView tvPrice, tvOldPrice, tvQuantity, tvTotalPrice, tvSelectedAddons;
     private TextView btnTempHot, btnTempColdBrew, btnTempIce;
     private TextView btnSweetnessSweet, btnSweetnessNormal, btnSweetnessLess, btnSweetnessNoSugar;
     private TextView btnMilkDairy, btnMilkCondensed, btnMilkPlant, btnMilkNone;
@@ -67,6 +69,8 @@ public class ProductDetailActivity extends AppCompatActivity {
     private int selectedTemperature = 0; // Default: 0=Hot
     private int selectedSweetness = 1; // Default: 1=Normal
     private int selectedMilkType = 0; // Default: 0=Dairy
+    private List<Addon> availableAddons = new ArrayList<>();
+    private List<String> selectedAddonIds = new ArrayList<>();
     private List<ProductVariant> variants;
     private Map<String, ProductVariant> variantMap; // Map size -> variant
 
@@ -98,6 +102,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvOldPrice = findViewById(R.id.tvOldPrice);
         tvQuantity = findViewById(R.id.tvQuantity);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
+        tvSelectedAddons = findViewById(R.id.tvSelectedAddons);
         
         View btnOpenCustomize = findViewById(R.id.btnOpenCustomize);
         btnOpenCustomize.setOnClickListener(v -> showCustomizationDialog());
@@ -302,6 +307,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         ImageView btnDialogDecreaseQty = dialog.findViewById(R.id.btnDialogDecreaseQty);
         ImageView btnDialogIncreaseQty = dialog.findViewById(R.id.btnDialogIncreaseQty);
         
+        // Addons
+        LinearLayout layoutAddons = dialog.findViewById(R.id.layoutAddons);
+        TextView tvLoadingAddons = dialog.findViewById(R.id.tvLoadingAddons);
+        
         com.google.android.material.button.MaterialButton btnDialogCancel = dialog.findViewById(R.id.btnDialogCancel);
         com.google.android.material.button.MaterialButton btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
         
@@ -462,11 +471,103 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnDialogConfirm.setOnClickListener(v -> {
             quantity = dialogQuantity[0];
             tvQuantity.setText(String.valueOf(quantity));
+            
+            // Collect selected addons
+            selectedAddonIds.clear();
+            List<String> addonNames = new ArrayList<>();
+            for (Addon addon : availableAddons) {
+                if (addon.isSelected()) {
+                    selectedAddonIds.add(addon.getId());
+                    addonNames.add(addon.getName());
+                }
+            }
+            Log.d(TAG, "Selected addons: " + selectedAddonIds.size());
+            
+            // Display selected addons
+            if (!addonNames.isEmpty()) {
+                tvSelectedAddons.setText("🧋 Topping: " + String.join(", ", addonNames));
+                tvSelectedAddons.setVisibility(View.VISIBLE);
+            } else {
+                tvSelectedAddons.setVisibility(View.GONE);
+            }
+            
             updateTotalPrice();
             dialog.dismiss();
         });
         
+        // Load addons from API
+        loadAddons(layoutAddons, tvLoadingAddons);
+        
         dialog.show();
+    }
+    
+    private void loadAddons(LinearLayout layoutAddons, TextView tvLoadingAddons) {
+        Call<ApiResponse<List<Addon>>> call = apiService.getAddons();
+        call.enqueue(new Callback<ApiResponse<List<Addon>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Addon>>> call, Response<ApiResponse<List<Addon>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    availableAddons = response.body().getData();
+                    tvLoadingAddons.setVisibility(View.GONE);
+                    
+                    // Display addons
+                    for (Addon addon : availableAddons) {
+                        if (addon.isActive()) {
+                            View addonView = createAddonView(addon, layoutAddons.getContext());
+                            layoutAddons.addView(addonView);
+                        }
+                    }
+                    
+                    Log.d(TAG, "Loaded " + availableAddons.size() + " addons");
+                } else {
+                    tvLoadingAddons.setText("Không có topping");
+                    Log.e(TAG, "Failed to load addons");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Addon>>> call, Throwable t) {
+                tvLoadingAddons.setText("Lỗi tải topping");
+                Log.e(TAG, "Error loading addons: " + t.getMessage());
+            }
+        });
+    }
+    
+    private View createAddonView(Addon addon, android.content.Context context) {
+        LinearLayout addonLayout = new LinearLayout(context);
+        addonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        addonLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        addonLayout.setPadding(0, 12, 0, 12);
+        addonLayout.setClickable(true);
+        addonLayout.setFocusable(true);
+        
+        // Checkbox
+        ImageView checkbox = new ImageView(context);
+        LinearLayout.LayoutParams checkboxParams = new LinearLayout.LayoutParams(32, 32);
+        checkboxParams.setMarginEnd(16);
+        checkbox.setLayoutParams(checkboxParams);
+        checkbox.setBackground(getResources().getDrawable(R.drawable.bg_checkbox_selector));
+        checkbox.setSelected(addon.isSelected());
+        
+        // Text
+        TextView textView = new TextView(context);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+        textView.setLayoutParams(textParams);
+        textView.setText(addon.getName() + " (+" + CurrencyUtils.formatPrice(addon.getPrice()) + ")");
+        textView.setTextColor(getResources().getColor(R.color.text_white));
+        textView.setTextSize(16);
+        
+        addonLayout.addView(checkbox);
+        addonLayout.addView(textView);
+        
+        // Click listener
+        addonLayout.setOnClickListener(v -> {
+            addon.setSelected(!addon.isSelected());
+            checkbox.setSelected(addon.isSelected());
+        });
+        
+        return addonLayout;
     }
 
     private void setupQuantityControls() {
@@ -488,7 +589,25 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void updateTotalPrice() {
+        // Base price
         double total = productPrice * quantity;
+        
+        // Add addons price
+        double addonsTotal = 0;
+        for (Addon addon : availableAddons) {
+            if (addon.isSelected()) {
+                addonsTotal += addon.getPrice();
+            }
+        }
+        
+        // Total with addons
+        total += (addonsTotal * quantity);
+        
+        Log.d(TAG, "Price breakdown - Base: " + productPrice + 
+                   ", Addons: " + addonsTotal + 
+                   ", Quantity: " + quantity + 
+                   ", Total: " + total);
+        
         tvTotalPrice.setText(CurrencyUtils.formatPrice(total));
     }
 
@@ -534,7 +653,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             selectedTemperature,
             selectedSweetness,
             selectedMilkType,
-            new ArrayList<>() // Empty array
+            selectedAddonIds // Send selected addon IDs
         );
         
         // Create OrderRequest

@@ -575,6 +575,50 @@
             android:focusable="true" />
     </LinearLayout>
 
+    <!-- Addons Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="12dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_addon"
+            android:tint="@color/coffee_accent"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Topping"
+            android:textColor="@color/text_white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Addons List (Dynamic) -->
+    <LinearLayout
+        android:id="@+id/layoutAddons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical">
+        
+        <!-- Addons will be added dynamically -->
+        <TextView
+            android:id="@+id/tvLoadingAddons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đang tải topping..."
+            android:textColor="@color/text_gray"
+            android:textSize="14sp"
+            android:layout_gravity="center" />
+    </LinearLayout>
+
     <!-- Buttons -->
     <LinearLayout
         android:layout_width="match_parent"

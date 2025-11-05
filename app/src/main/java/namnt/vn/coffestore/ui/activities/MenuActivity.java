@@ -32,7 +32,10 @@ import namnt.vn.coffestore.data.model.BrewMethod;
 import namnt.vn.coffestore.data.model.CoffeeItem;
 import namnt.vn.coffestore.data.model.Product;
 import namnt.vn.coffestore.data.model.RoastLevel;
+import namnt.vn.coffestore.data.model.UserProfile;
 import namnt.vn.coffestore.data.model.api.ApiResponse;
+import namnt.vn.coffestore.data.model.order.OrderResponse;
+import namnt.vn.coffestore.data.model.order.OrderItemDetail;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.ui.adapters.MenuAdapter;
@@ -47,7 +50,7 @@ public class MenuActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private ImageView ivMenu, ivAvatar, ivCart;
-    private TextView tvGreeting, tvUserName;
+    private TextView tvGreeting, tvUserName, tvCartBadge;
     private EditText etSearch;
     private Spinner spinnerOrigin, spinnerRoastLevel, spinnerBrewMethod;
     private RecyclerView rvCoffeeList;
@@ -92,6 +95,19 @@ public class MenuActivity extends AppCompatActivity {
         
         // Load products from API
         loadProductsFromApi();
+        
+        // Load user profile
+        loadUserProfile();
+        
+        // Load cart count
+        loadCartCount();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh cart count when returning to this activity
+        loadCartCount();
     }
 
     private void initViews() {
@@ -99,6 +115,7 @@ public class MenuActivity extends AppCompatActivity {
         ivMenu = findViewById(R.id.ivMenu);
         ivAvatar = findViewById(R.id.ivAvatar);
         ivCart = findViewById(R.id.ivCart);
+        tvCartBadge = findViewById(R.id.tvCartBadge);
         tvGreeting = findViewById(R.id.tvGreeting);
         tvUserName = findViewById(R.id.tvUserName);
         etSearch = findViewById(R.id.etSearch);
@@ -111,19 +128,11 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void setupGreeting() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        // Set greeting text
+        tvGreeting.setText("Hello");
         
-        String greeting;
-        if (hour >= 0 && hour < 12) {
-            greeting = getString(R.string.greeting_morning);
-        } else {
-            greeting = getString(R.string.greeting_evening);
-        }
-        
-        tvGreeting.setText("Hi, " + greeting);
-        // You can set user name from SharedPreferences or Firebase Auth later
-        tvUserName.setText(getString(R.string.user_name));
+        // User name will be loaded from API in loadUserProfile()
+        tvUserName.setText("Loading...");
     }
 
 
@@ -613,6 +622,12 @@ public class MenuActivity extends AppCompatActivity {
                 drawerLayout.closeDrawers();
                 return true;
             }
+            if (id == R.id.nav_profile) {
+                drawerLayout.closeDrawers();
+                Intent intent = new Intent(MenuActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                return true;
+            }
             return false;
         });
     }
@@ -677,6 +692,109 @@ public class MenuActivity extends AppCompatActivity {
             }
         }
         return vietnamese;
+    }
+    
+    private void loadUserProfile() {
+        String accessToken = authViewModel.getAccessToken();
+        if (accessToken.isEmpty()) {
+            return;
+        }
+        
+        String bearerToken = "Bearer " + accessToken;
+        Call<ApiResponse<UserProfile>> call = apiService.getUserProfile(bearerToken);
+        call.enqueue(new Callback<ApiResponse<UserProfile>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<UserProfile>> call, Response<ApiResponse<UserProfile>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    UserProfile profile = response.body().getData();
+                    if (profile != null && profile.getFullName() != null) {
+                        tvUserName.setText(profile.getFullName());
+                        Log.d(TAG, "User profile loaded: " + profile.getFullName());
+                    }
+                } else {
+                    Log.e(TAG, "Failed to load user profile");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<UserProfile>> call, Throwable t) {
+                Log.e(TAG, "Error loading user profile: " + t.getMessage());
+            }
+        });
+    }
+    
+    private void loadCartCount() {
+        String accessToken = authViewModel.getAccessToken();
+        if (accessToken.isEmpty()) {
+            return;
+        }
+        
+        String bearerToken = "Bearer " + accessToken;
+        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(bearerToken);
+        call.enqueue(new Callback<ApiResponse<List<OrderResponse>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {
+                Log.d(TAG, "Cart API response code: " + response.code());
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "Response body success: " + response.body().isSuccess());
+                    
+                    if (response.body().isSuccess()) {
+                        List<OrderResponse> orders = response.body().getData();
+                        Log.d(TAG, "Total orders: " + (orders != null ? orders.size() : 0));
+                        
+                        // Calculate total quantity from ALL orders (no status filter)
+                        int totalQuantity = 0;
+                        if (orders != null) {
+                            for (OrderResponse order : orders) {
+                                Log.d(TAG, "Order ID: " + order.getId() + 
+                                      ", Items: " + (order.getOrderItems() != null ? order.getOrderItems().size() : 0));
+                                
+                                // Count ALL items from ALL orders
+                                if (order.getOrderItems() != null) {
+                                    for (OrderItemDetail item : order.getOrderItems()) {
+                                        int qty = item.getQuantity();
+                                        totalQuantity += qty;
+                                        Log.d(TAG, "  + Item quantity: " + qty);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Log.d(TAG, "===== Final cart total quantity: " + totalQuantity + " =====");
+                        
+                        // Update badge on UI thread
+                        final int finalTotal = totalQuantity;
+                        runOnUiThread(() -> {
+                            updateCartBadge(finalTotal);
+                            Log.d(TAG, "Badge updated with: " + finalTotal);
+                        });
+                    } else {
+                        Log.e(TAG, "API returned success=false: " + response.body().getMessage());
+                    }
+                } else {
+                    Log.e(TAG, "Failed to load cart count - Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<OrderResponse>>> call, Throwable t) {
+                Log.e(TAG, "Error loading cart count: " + t.getMessage());
+            }
+        });
+    }
+    
+    private void updateCartBadge(int count) {
+        Log.d(TAG, "updateCartBadge called with count: " + count);
+        Log.d(TAG, "tvCartBadge is null? " + (tvCartBadge == null));
+        
+        if (tvCartBadge != null) {
+            tvCartBadge.setText(String.valueOf(count));
+            tvCartBadge.setVisibility(View.VISIBLE);  // Always show for testing
+            Log.d(TAG, "Badge text set to: " + count + ", visibility: VISIBLE");
+        } else {
+            Log.e(TAG, "tvCartBadge is NULL!");
+        }
     }
     
     private void redirectToLogin() {

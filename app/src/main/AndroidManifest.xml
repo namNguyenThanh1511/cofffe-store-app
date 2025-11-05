@@ -41,6 +41,10 @@
             android:name=".ui.activities.CartActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity 
+            android:name=".ui.activities.ProfileActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
         <!--    <activity android:name=".ui.activities.MainActivity" />-->
     </application>
 
