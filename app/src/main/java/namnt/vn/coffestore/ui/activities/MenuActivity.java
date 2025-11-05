@@ -1,6 +1,9 @@
 package namnt.vn.coffestore.ui.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -39,6 +42,7 @@ import namnt.vn.coffestore.data.model.order.OrderItemDetail;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.ui.adapters.MenuAdapter;
+import namnt.vn.coffestore.utils.NotificationHelper;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -47,6 +51,7 @@ import com.google.gson.Gson;
 
 public class MenuActivity extends AppCompatActivity {
     private static final String TAG = "MenuActivity";
+    private static final int NOTIFICATION_PERMISSION_CODE = 1001;
 
     private DrawerLayout drawerLayout;
     private ImageView ivMenu, ivAvatar, ivCart;
@@ -82,6 +87,12 @@ public class MenuActivity extends AppCompatActivity {
             redirectToLogin();
             return;
         }
+        
+        // Create notification channel
+        NotificationHelper.createNotificationChannel(this);
+        
+        // Request notification permission for Android 13+
+        requestNotificationPermission();
 
         initViews();
         setupGreeting();
@@ -789,11 +800,44 @@ public class MenuActivity extends AppCompatActivity {
         Log.d(TAG, "tvCartBadge is null? " + (tvCartBadge == null));
         
         if (tvCartBadge != null) {
-            tvCartBadge.setText(String.valueOf(count));
-            tvCartBadge.setVisibility(View.VISIBLE);  // Always show for testing
-            Log.d(TAG, "Badge text set to: " + count + ", visibility: VISIBLE");
+            if (count > 0) {
+                tvCartBadge.setText(String.valueOf(count));
+                tvCartBadge.setVisibility(View.VISIBLE);
+                Log.d(TAG, "Badge text set to: " + count + ", visibility: VISIBLE");
+                
+                // Show notification for Stage 2: Has unpaid orders
+                NotificationHelper.updateNotificationStage(this, 2, count);
+                Log.d(TAG, "Notification stage 2 (unpaid) shown with count: " + count);
+            } else {
+                tvCartBadge.setVisibility(View.GONE);
+                
+                // Stage 1: No orders - Cancel notification
+                NotificationHelper.updateNotificationStage(this, 1, 0);
+                Log.d(TAG, "Notification stage 1 (no orders) - cancelled");
+            }
         } else {
             Log.e(TAG, "tvCartBadge is NULL!");
+        }
+    }
+    
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
+            }
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Notification permission granted");
+            } else {
+                Log.d(TAG, "Notification permission denied");
+                Toast.makeText(this, "Vui lòng bật thông báo để nhận thông tin về đơn hàng", Toast.LENGTH_LONG).show();
+            }
         }
     }
     
