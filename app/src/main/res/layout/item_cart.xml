@@ -59,6 +59,17 @@
                 android:text="Medium"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp" />
+            
+            <!-- Customization Details -->
+            <TextView
+                android:id="@+id/tvCartItemCustomization"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Nóng • 50% đường • Sữa bò"
+                android:textColor="@color/text_gray"
+                android:textSize="12sp"
+                android:alpha="0.8" />
 
             <!-- Price and Quantity -->
             <LinearLayout

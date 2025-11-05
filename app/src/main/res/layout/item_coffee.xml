@@ -27,12 +27,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivCoffeeImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:contentDescription="Coffee Image" />
+                android:contentDescription="Coffee Image"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
             <TextView
                 android:id="@+id/tvNoImage"

@@ -62,18 +62,38 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Cart Icon -->
-                <ImageView
-                    android:id="@+id/ivCart"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_cart"
-                    android:contentDescription="Cart"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?android:attr/selectableItemBackgroundBorderless" />
+                <!-- Cart Icon with Badge -->
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp">
+
+                    <ImageView
+                        android:id="@+id/ivCart"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_cart"
+                        android:contentDescription="Cart"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+                    <TextView
+                        android:id="@+id/tvCartBadge"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/bg_cart_badge"
+                        android:gravity="center"
+                        android:text="0"
+                        android:textColor="@color/text_white"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
 
                 <!-- Menu Icon -->
                 <ImageView
@@ -120,76 +140,93 @@
                     android:imeOptions="actionSearch" />
             </LinearLayout>
 
-            <!-- Categories Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/categories"
-                android:textColor="@color/text_white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Category Buttons -->
+            <!-- Filters Section - Horizontal Scroll -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:scrollbars="none">
+                android:layout_marginTop="20dp"
+                android:scrollbars="horizontal"
+                android:scrollbarStyle="outsideOverlay"
+                android:fadeScrollbars="false">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingBottom="8dp">
 
-                    <TextView
-                        android:id="@+id/btnBrewedCoffee"
+                    <!-- Origin Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerOrigin"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/brewed_coffee"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
 
-                    <TextView
-                        android:id="@+id/btnColdBrew"
+                    <!-- Roast Level Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerRoastLevel"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/cold_brew"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
 
-                    <TextView
-                        android:id="@+id/btnBeverages"
+                    <!-- Brew Method Filter -->
+                    <Spinner
+                        android:id="@+id/spinnerBrewMethod"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_category_button"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/beverages"
-                        android:textColor="@color/text_white"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
+                        android:layout_height="44dp"
+                        android:minWidth="160dp"
+                        android:background="@drawable/bg_filter_chip"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:popupBackground="@drawable/bg_search" />
                 </LinearLayout>
             </HorizontalScrollView>
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="60dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/ic_empty_coffee"
+                    android:alpha="0.5"
+                    android:contentDescription="No products" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Chưa có sản phẩm"
+                    android:textColor="@color/text_white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Thử thay đổi bộ lọc để xem sản phẩm khác"
+                    android:textColor="@color/text_gray"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+            </LinearLayout>
 
             <!-- Coffee Grid -->
             <androidx.recyclerview.widget.RecyclerView
