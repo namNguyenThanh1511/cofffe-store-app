@@ -35,4 +35,10 @@
         <item name="android:textStyle">bold</item>
         <item name="android:elevation">6dp</item>
     </style>
+
+    <!-- Rounded corners for ImageView -->
+    <style name="RoundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 </resources>
