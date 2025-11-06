@@ -42,6 +42,7 @@ import namnt.vn.coffestore.data.model.order.OrderItemDetail;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.ui.adapters.MenuAdapter;
+import namnt.vn.coffestore.utils.CartManager;
 import namnt.vn.coffestore.utils.NotificationHelper;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
 import retrofit2.Call;
@@ -735,64 +736,15 @@ public class MenuActivity extends AppCompatActivity {
     }
     
     private void loadCartCount() {
-        String accessToken = authViewModel.getAccessToken();
-        if (accessToken.isEmpty()) {
-            return;
-        }
+        // Load cart count from local storage
+        int totalQuantity = CartManager.getInstance(this).getCartItemCount();
         
-        String bearerToken = "Bearer " + accessToken;
-        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(bearerToken);
-        call.enqueue(new Callback<ApiResponse<List<OrderResponse>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {
-                Log.d(TAG, "Cart API response code: " + response.code());
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, "Response body success: " + response.body().isSuccess());
-                    
-                    if (response.body().isSuccess()) {
-                        List<OrderResponse> orders = response.body().getData();
-                        Log.d(TAG, "Total orders: " + (orders != null ? orders.size() : 0));
-                        
-                        // Calculate total quantity from ALL orders (no status filter)
-                        int totalQuantity = 0;
-                        if (orders != null) {
-                            for (OrderResponse order : orders) {
-                                Log.d(TAG, "Order ID: " + order.getId() + 
-                                      ", Items: " + (order.getOrderItems() != null ? order.getOrderItems().size() : 0));
-                                
-                                // Count ALL items from ALL orders
-                                if (order.getOrderItems() != null) {
-                                    for (OrderItemDetail item : order.getOrderItems()) {
-                                        int qty = item.getQuantity();
-                                        totalQuantity += qty;
-                                        Log.d(TAG, "  + Item quantity: " + qty);
-                                    }
-                                }
-                            }
-                        }
-                        
-                        Log.d(TAG, "===== Final cart total quantity: " + totalQuantity + " =====");
-                        
-                        // Update badge on UI thread
-                        final int finalTotal = totalQuantity;
-                        runOnUiThread(() -> {
-                            updateCartBadge(finalTotal);
-                            Log.d(TAG, "Badge updated with: " + finalTotal);
-                        });
-                    } else {
-                        Log.e(TAG, "API returned success=false: " + response.body().getMessage());
-                    }
-                } else {
-                    Log.e(TAG, "Failed to load cart count - Response code: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<List<OrderResponse>>> call, Throwable t) {
-                Log.e(TAG, "Error loading cart count: " + t.getMessage());
-            }
-        });
+        Log.d(TAG, "===== Loading cart from LOCAL =====");
+        Log.d(TAG, "Total items in local cart: " + CartManager.getInstance(this).getCartItems().size());
+        Log.d(TAG, "Total quantity: " + totalQuantity);
+        
+        // Update badge
+        updateCartBadge(totalQuantity);
     }
     
     private void updateCartBadge(int count) {

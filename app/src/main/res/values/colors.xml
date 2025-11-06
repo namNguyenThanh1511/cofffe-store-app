@@ -9,6 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     
     <!-- Coffee App Colors -->
+    <color name="brown_bg">#2D1E16</color>
     <color name="brown_primary">#4A3428</color>
     <color name="brown_dark">#2D1E16</color>
     <color name="brown_light">#6B4E3D</color>

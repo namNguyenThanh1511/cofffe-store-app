@@ -32,6 +32,7 @@ import java.util.Map;
 
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.Addon;
+import namnt.vn.coffestore.data.model.CartItem;
 import namnt.vn.coffestore.data.model.ProductVariant;
 import namnt.vn.coffestore.data.model.api.ApiResponse;
 import namnt.vn.coffestore.data.model.order.OrderItem;
@@ -39,6 +40,7 @@ import namnt.vn.coffestore.data.model.order.OrderRequest;
 import namnt.vn.coffestore.data.model.order.OrderResponse;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
+import namnt.vn.coffestore.utils.CartManager;
 import namnt.vn.coffestore.utils.CurrencyUtils;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
 import retrofit2.Call;
@@ -620,7 +622,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         
         btnAddToCart.setOnClickListener(v -> {
             if (variantMap != null && variantMap.containsKey(selectedSize)) {
-                createOrder();
+                addToCart();
             } else {
                 Toast.makeText(this, "Vui lòng chọn size", Toast.LENGTH_SHORT).show();
             }
@@ -637,7 +639,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }).get(AuthViewModel.class);
     }
     
-    private void createOrder() {
+    private void addToCart() {
         if (variantMap == null || !variantMap.containsKey(selectedSize)) {
             Toast.makeText(this, "Vui lòng chọn size", Toast.LENGTH_SHORT).show();
             return;
@@ -646,81 +648,35 @@ public class ProductDetailActivity extends AppCompatActivity {
         ProductVariant selectedVariant = variantMap.get(selectedSize);
         String variantId = selectedVariant.getId();
         
-        // Create OrderItem
-        OrderItem orderItem = new OrderItem(
+        // Create CartItem
+        CartItem cartItem = new CartItem(
+            productId,
             variantId,
+            productName,
+            productPrice,
+            productImage,
+            selectedSize,
             quantity,
-            selectedTemperature,
-            selectedSweetness,
-            selectedMilkType,
-            selectedAddonIds // Send selected addon IDs
+            convertTemperatureToString(selectedTemperature),
+            convertSweetnessToString(selectedSweetness),
+            convertMilkTypeToString(selectedMilkType),
+            new ArrayList<>(selectedAddonIds)
         );
         
-        // Create OrderRequest
-        OrderRequest orderRequest = new OrderRequest(
-            0, // deliveryType = 0
-            Collections.singletonList(orderItem)
-        );
+        // Add to local cart
+        CartManager.getInstance(this).addItem(cartItem);
         
-        // Log request details
-        Log.d(TAG, "=== ORDER REQUEST ===");
+        Log.d(TAG, "=== ADDED TO LOCAL CART ===");
+        Log.d(TAG, "Product: " + productName);
         Log.d(TAG, "Variant ID: " + variantId);
         Log.d(TAG, "Quantity: " + quantity);
-        Log.d(TAG, "Temperature: " + selectedTemperature);
-        Log.d(TAG, "Sweetness: " + selectedSweetness);
-        Log.d(TAG, "Milk Type: " + selectedMilkType);
-        Log.d(TAG, "Request JSON: " + new com.google.gson.Gson().toJson(orderRequest));
+        Log.d(TAG, "Total items in cart: " + CartManager.getInstance(this).getCartItemCount());
         
-        // Get access token
-        String accessToken = authViewModel.getAccessToken();
-        if (accessToken.isEmpty()) {
-            Toast.makeText(this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        // Show success message
+        Toast.makeText(this, "✓ Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
         
-        // Disable button to prevent double click
-        btnAddToCart.setEnabled(false);
-        btnAddToCart.setText("Đang xử lý...");
-        
-        // Call API
-        String bearerToken = "Bearer " + accessToken;
-        Call<ApiResponse<OrderResponse>> call = apiService.createOrder(bearerToken, orderRequest);
-        call.enqueue(new Callback<ApiResponse<OrderResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<OrderResponse>> call, Response<ApiResponse<OrderResponse>> response) {
-                btnAddToCart.setEnabled(true);
-                btnAddToCart.setText("Đặt hàng");
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<OrderResponse> apiResponse = response.body();
-                    
-                    if (apiResponse.isSuccess()) {
-                        Log.d(TAG, "Order created successfully: " + apiResponse.getData().getId());
-                        showSuccessDialog();
-                    } else {
-                        Toast.makeText(ProductDetailActivity.this, "Lỗi: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Log.e(TAG, "Order failed: " + response.code());
-                    try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
-                        Log.e(TAG, "Error body: " + errorBody);
-                        Toast.makeText(ProductDetailActivity.this, "Đặt hàng thất bại: " + response.code() + " - " + errorBody, Toast.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        Toast.makeText(ProductDetailActivity.this, "Đặt hàng thất bại: " + response.code(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<OrderResponse>> call, Throwable t) {
-                btnAddToCart.setEnabled(true);
-                btnAddToCart.setText("Đặt hàng");
-                
-                Log.e(TAG, "Order API call failed: " + t.getMessage(), t);
-                Toast.makeText(ProductDetailActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Show success dialog
+        showSuccessDialog();
     }
     
     private void showSuccessDialog() {
@@ -766,5 +722,35 @@ public class ProductDetailActivity extends AppCompatActivity {
         }, 2000);
         
         successDialog.show();
+    }
+    
+    // Helper methods to convert int to String for CartItem
+    private String convertTemperatureToString(int temperature) {
+        switch (temperature) {
+            case 0: return "Hot";
+            case 1: return "ColdBrew";
+            case 2: return "Ice";
+            default: return "Hot";
+        }
+    }
+    
+    private String convertSweetnessToString(int sweetness) {
+        switch (sweetness) {
+            case 0: return "Sweet";
+            case 1: return "Normal";
+            case 2: return "Less";
+            case 3: return "NoSugar";
+            default: return "Normal";
+        }
+    }
+    
+    private String convertMilkTypeToString(int milkType) {
+        switch (milkType) {
+            case 0: return "Dairy";
+            case 1: return "Condensed";
+            case 2: return "Plant";
+            case 3: return "None";
+            default: return "Dairy";
+        }
     }
 }

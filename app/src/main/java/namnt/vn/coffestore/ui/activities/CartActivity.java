@@ -1,5 +1,6 @@
 package namnt.vn.coffestore.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,20 +17,25 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.data.model.CartItem;
 import namnt.vn.coffestore.data.model.api.ApiResponse;
-import namnt.vn.coffestore.data.model.order.OrderItemDetail;
 import namnt.vn.coffestore.data.model.order.OrderResponse;
 import namnt.vn.coffestore.network.ApiService;
 import namnt.vn.coffestore.network.RetrofitClient;
 import namnt.vn.coffestore.ui.adapters.CartAdapter;
+import namnt.vn.coffestore.utils.CartManager;
 import namnt.vn.coffestore.utils.CurrencyUtils;
+import namnt.vn.coffestore.utils.NotificationHelper;
 import namnt.vn.coffestore.viewmodel.AuthViewModel;
+import namnt.vn.coffestore.data.model.order.OrderItem;
+import namnt.vn.coffestore.data.model.order.OrderRequest;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,7 +51,6 @@ public class CartActivity extends AppCompatActivity {
     
     private CartAdapter cartAdapter;
     private List<CartItem> cartItems;
-    private List<OrderResponse> orders;
     
     private ApiService apiService;
     private AuthViewModel authViewModel;
@@ -65,8 +70,15 @@ public class CartActivity extends AppCompatActivity {
         // Initialize API service
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
         
-        // Load orders from API
-        loadOrdersFromApi();
+        // Load cart from local storage
+        loadCartFromLocal();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh cart when returning to this activity
+        loadCartFromLocal();
     }
 
     private void initViews() {
@@ -89,25 +101,38 @@ public class CartActivity extends AppCompatActivity {
         cartAdapter.setOnCartItemListener(new CartAdapter.OnCartItemListener() {
             @Override
             public void onQuantityChanged(CartItem item, int newQuantity) {
-                item.setQuantity(newQuantity);
-                cartAdapter.notifyDataSetChanged();
-                updateCartSummary();
-                Toast.makeText(CartActivity.this, "Quantity updated", Toast.LENGTH_SHORT).show();
+                // Update in local storage
+                int position = cartItems.indexOf(item);
+                if (position >= 0) {
+                    CartManager.getInstance(CartActivity.this).updateItemQuantity(position, newQuantity);
+                    loadCartFromLocal(); // Refresh from local
+                    Toast.makeText(CartActivity.this, "Đã cập nhật số lượng", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
             public void onItemRemoved(CartItem item) {
                 new AlertDialog.Builder(CartActivity.this)
-                    .setTitle("Remove Item")
-                    .setMessage("Remove " + item.getName() + " from cart?")
-                    .setPositiveButton("Remove", (dialog, which) -> {
-                        cartItems.remove(item);
-                        cartAdapter.setCartItems(cartItems);
-                        updateCartSummary();
-                        Toast.makeText(CartActivity.this, "Item removed", Toast.LENGTH_SHORT).show();
+                    .setTitle("Xóa sản phẩm")
+                    .setMessage("Xóa " + item.getName() + " khỏi giỏ hàng?")
+                    .setPositiveButton("Xóa", (dialog, which) -> {
+                        int position = cartItems.indexOf(item);
+                        if (position >= 0) {
+                            CartManager.getInstance(CartActivity.this).removeItem(position);
+                            loadCartFromLocal(); // Refresh from local
+                            Toast.makeText(CartActivity.this, "Đã xóa sản phẩm", Toast.LENGTH_SHORT).show();
+                        }
                     })
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton("Hủy", null)
                     .show();
+            }
+            
+            @Override
+            public void onItemSelectionChanged(CartItem item, boolean isSelected) {
+                // Update selection in local storage
+                CartManager.getInstance(CartActivity.this).addItem(item);
+                // Recalculate summary for selected items only
+                updateCartSummary();
             }
         });
     }
@@ -122,117 +147,19 @@ public class CartActivity extends AppCompatActivity {
         }).get(AuthViewModel.class);
     }
     
-    private void loadOrdersFromApi() {
-        String accessToken = authViewModel.getAccessToken();
-        if (accessToken.isEmpty()) {
-            Toast.makeText(this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+    private void loadCartFromLocal() {
+        Log.d(TAG, "Loading cart from local storage...");
         
-        String bearerToken = "Bearer " + accessToken;
-        Log.d(TAG, "Loading orders from API...");
+        // Load from CartManager
+        cartItems = CartManager.getInstance(this).getCartItems();
         
-        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(bearerToken);
-        call.enqueue(new Callback<ApiResponse<List<OrderResponse>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<OrderResponse>> apiResponse = response.body();
-                    
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
-                        orders = apiResponse.getData();
-                        Log.d(TAG, "Loaded " + orders.size() + " orders");
-                        
-                        // Convert orders to cart items
-                        convertOrdersToCartItems();
-                        updateCartSummary();
-                    } else {
-                        Log.e(TAG, "API response not successful");
-                        showEmptyCart();
-                    }
-                } else {
-                    Log.e(TAG, "Response not successful: " + response.code());
-                    Toast.makeText(CartActivity.this, "Lỗi tải đơn hàng: " + response.code(), Toast.LENGTH_SHORT).show();
-                    showEmptyCart();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<List<OrderResponse>>> call, Throwable t) {
-                Log.e(TAG, "API call failed: " + t.getMessage(), t);
-                Toast.makeText(CartActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                showEmptyCart();
-            }
-        });
-    }
-    
-    private void convertOrdersToCartItems() {
-        cartItems = new ArrayList<>();
+        Log.d(TAG, "Loaded " + cartItems.size() + " items from local cart");
         
-        for (OrderResponse order : orders) {
-            if (order.getOrderItems() != null) {
-                for (OrderItemDetail item : order.getOrderItems()) {
-                    // Debug log
-                    Log.d(TAG, "OrderItem - variantSize: " + item.getVariantSize() + 
-                          ", productId: " + item.getProductId());
-                    
-                    // Create CartItem from OrderItemDetail with customization
-                    CartItem cartItem = new CartItem(
-                        item.getId(),
-                        "Loading...", // Product name - will be loaded from API
-                        item.getUnitPrice(),
-                        null, // Image URL - will be loaded from API
-                        item.getVariantSize(),
-                        item.getQuantity(),
-                        item.getTemperature(),
-                        item.getSweetness(),
-                        item.getMilkType()
-                    );
-                    cartItems.add(cartItem);
-                    
-                    // Load product details asynchronously
-                    loadProductDetails(item.getProductId(), cartItem);
-                }
-            }
-        }
-        
+        // Update adapter
         cartAdapter.setCartItems(cartItems);
-        Log.d(TAG, "Converted to " + cartItems.size() + " cart items");
-    }
-    
-    private void loadProductDetails(String productId, CartItem cartItem) {
-        if (productId == null || productId.isEmpty()) {
-            cartItem.setName("Unknown Product");
-            cartAdapter.notifyDataSetChanged();
-            return;
-        }
         
-        Call<ApiResponse<namnt.vn.coffestore.data.model.Product>> call = apiService.getProductById(productId);
-        call.enqueue(new Callback<ApiResponse<namnt.vn.coffestore.data.model.Product>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<namnt.vn.coffestore.data.model.Product>> call, 
-                                 Response<ApiResponse<namnt.vn.coffestore.data.model.Product>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<namnt.vn.coffestore.data.model.Product> apiResponse = response.body();
-                    
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
-                        namnt.vn.coffestore.data.model.Product product = apiResponse.getData();
-                        cartItem.setName(product.getName());
-                        cartItem.setImageUrl(product.getImageUrl());
-                        cartAdapter.notifyDataSetChanged();
-                        Log.d(TAG, "Loaded product: " + product.getName());
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<namnt.vn.coffestore.data.model.Product>> call, Throwable t) {
-                Log.e(TAG, "Failed to load product " + productId + ": " + t.getMessage());
-                cartItem.setName("Product #" + productId.substring(0, Math.min(8, productId.length())));
-                cartAdapter.notifyDataSetChanged();
-            }
-        });
+        // Update summary
+        updateCartSummary();
     }
     
     private void showEmptyCart() {
@@ -253,10 +180,14 @@ public class CartActivity extends AppCompatActivity {
             rvCartItems.setVisibility(View.VISIBLE);
             summaryLayout.setVisibility(View.VISIBLE);
             
-            // Calculate totals
+            // Calculate totals for SELECTED items only
             double subtotal = 0;
+            int selectedCount = 0;
             for (CartItem item : cartItems) {
-                subtotal += item.getTotal();
+                if (item.isSelected()) {
+                    subtotal += item.getTotal();
+                    selectedCount++;
+                }
             }
             
             double total = subtotal + DELIVERY_FEE;
@@ -265,6 +196,9 @@ public class CartActivity extends AppCompatActivity {
             tvSubtotal.setText(CurrencyUtils.formatPrice(subtotal));
             tvDeliveryFee.setText(CurrencyUtils.formatPrice(DELIVERY_FEE));
             tvTotal.setText(CurrencyUtils.formatPrice(total));
+            
+            Log.d(TAG, "Selected items: " + selectedCount + "/" + cartItems.size());
+            Log.d(TAG, "Selected subtotal: " + subtotal);
         }
     }
 
@@ -274,23 +208,201 @@ public class CartActivity extends AppCompatActivity {
         btnClearCart.setOnClickListener(v -> {
             if (!cartItems.isEmpty()) {
                 new AlertDialog.Builder(this)
-                    .setTitle("Clear Cart")
-                    .setMessage("Remove all items from cart?")
-                    .setPositiveButton("Clear", (dialog, which) -> {
-                        cartItems.clear();
-                        cartAdapter.setCartItems(cartItems);
-                        updateCartSummary();
-                        Toast.makeText(this, "Cart cleared", Toast.LENGTH_SHORT).show();
+                    .setTitle("Xóa giỏ hàng")
+                    .setMessage("Xóa tất cả sản phẩm khỏi giỏ hàng?")
+                    .setPositiveButton("Xóa", (dialog, which) -> {
+                        CartManager.getInstance(this).clearCart();
+                        loadCartFromLocal();
+                        Toast.makeText(this, "Đã xóa giỏ hàng", Toast.LENGTH_SHORT).show();
                     })
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton("Hủy", null)
                     .show();
             }
         });
 
         btnCheckout.setOnClickListener(v -> {
-            if (!cartItems.isEmpty()) {
-                Toast.makeText(this, "Chức năng thanh toán đang phát triển...", Toast.LENGTH_SHORT).show();
+            // Count selected items
+            int selectedCount = 0;
+            for (CartItem item : cartItems) {
+                if (item.isSelected()) selectedCount++;
+            }
+            
+            if (selectedCount > 0) {
+                checkout();
+            } else {
+                Toast.makeText(this, "Vui lòng chọn sản phẩm để thanh toán", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void checkout() {
+        // Check authentication
+        String accessToken = authViewModel.getAccessToken();
+        if (accessToken.isEmpty()) {
+            Toast.makeText(this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create OrderItems from SELECTED CartItems only
+        List<OrderItem> orderItems = new ArrayList<>();
+        final List<Integer> selectedPositions = new ArrayList<>();
+        
+        for (int i = 0; i < cartItems.size(); i++) {
+            CartItem cartItem = cartItems.get(i);
+            if (cartItem.isSelected()) {
+                OrderItem orderItem = new OrderItem(
+                    cartItem.getVariantId(),
+                    cartItem.getQuantity(),
+                    convertTemperatureToInt(cartItem.getTemperature()),
+                    convertSweetnessToInt(cartItem.getSweetness()),
+                    convertMilkTypeToInt(cartItem.getMilkType()),
+                    cartItem.getSelectedAddonIds()
+                );
+                orderItems.add(orderItem);
+                selectedPositions.add(i);
+            }
+        }
+        
+        // Create OrderRequest
+        OrderRequest orderRequest = new OrderRequest(
+            0, // deliveryType = 0
+            orderItems
+        );
+        
+        // Log request
+        Log.d(TAG, "=== CHECKOUT REQUEST ===");
+        Log.d(TAG, "Total items: " + orderItems.size());
+        Log.d(TAG, "Request JSON: " + new com.google.gson.Gson().toJson(orderRequest));
+        
+        // Disable button
+        btnCheckout.setEnabled(false);
+        btnCheckout.setText("Đang xử lý...");
+        
+        // Call API
+        String bearerToken = "Bearer " + accessToken;
+        Call<ApiResponse<OrderResponse>> call = apiService.createOrder(bearerToken, orderRequest);
+        call.enqueue(new Callback<ApiResponse<OrderResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<OrderResponse>> call, Response<ApiResponse<OrderResponse>> response) {
+                btnCheckout.setEnabled(true);
+                btnCheckout.setText("Thanh toán");
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<OrderResponse> apiResponse = response.body();
+                    
+                    if (apiResponse.isSuccess()) {
+                        Log.d(TAG, "Checkout successful!");
+                        
+                        OrderResponse orderResponse = apiResponse.getData();
+                        
+                        // Log all response headers for debugging
+                        Log.d(TAG, "Response Headers:");
+                        for (String headerName : response.headers().names()) {
+                            Log.d(TAG, headerName + ": " + response.headers().get(headerName));
+                        }
+                        
+                        // Get payment URL from response header (try multiple variations)
+                        String paymentUrl = response.headers().get("x-forward-payment");
+                        if (paymentUrl == null) paymentUrl = response.headers().get("X-Forward-Payment");
+                        if (paymentUrl == null) paymentUrl = response.headers().get("X-Foraward-Payment");
+                        if (paymentUrl == null) paymentUrl = response.headers().get("x-foraward-payment");
+                        
+                        Log.d(TAG, "Payment URL: " + paymentUrl);
+                        
+                        if (paymentUrl == null || paymentUrl.isEmpty()) {
+                            Toast.makeText(CartActivity.this, "Không tìm thấy URL thanh toán. Check logs!", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        
+                        // Remove only SELECTED items from local cart
+                        // Sort in descending order to avoid index shifting
+                        Collections.sort(selectedPositions, Collections.reverseOrder());
+                        for (int position : selectedPositions) {
+                            CartManager.getInstance(CartActivity.this).removeItem(position);
+                        }
+                        
+                        // Check remaining items
+                        int remainingCount = CartManager.getInstance(CartActivity.this).getCartItemCount();
+                        if (remainingCount > 0) {
+                            // Still have items - Show stage 2
+                            NotificationHelper.updateNotificationStage(CartActivity.this, 2, remainingCount);
+                        } else {
+                            // No items left - Show stage 3, then hide
+                            NotificationHelper.updateNotificationStage(CartActivity.this, 3, 0);
+                        }
+                        
+                        // Navigate to payment WebView
+                        showPaymentWebView(paymentUrl, orderResponse);
+                    } else {
+                        Toast.makeText(CartActivity.this, "Lỗi: " + apiResponse.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Log.e(TAG, "Checkout failed: " + response.code());
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "";
+                        Log.e(TAG, "Error body: " + errorBody);
+                        Toast.makeText(CartActivity.this, "Thanh toán thất bại: " + response.code(), Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(CartActivity.this, "Thanh toán thất bại", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<OrderResponse>> call, Throwable t) {
+                btnCheckout.setEnabled(true);
+                btnCheckout.setText("Thanh toán");
+                
+                Log.e(TAG, "Checkout failed: " + t.getMessage(), t);
+                Toast.makeText(CartActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    
+    private void showPaymentWebView(String paymentUrl, OrderResponse orderResponse) {
+        // Navigate to PaymentWebViewActivity with payment URL
+        Intent intent = new Intent(this, PaymentWebViewActivity.class);
+        
+        // Pass payment URL and order data as JSON
+        Gson gson = new Gson();
+        String orderJson = gson.toJson(orderResponse);
+        intent.putExtra(PaymentWebViewActivity.EXTRA_PAYMENT_URL, paymentUrl);
+        intent.putExtra(PaymentWebViewActivity.EXTRA_ORDER_RESPONSE, orderJson);
+        
+        startActivity(intent);
+        finish();
+    }
+    
+    // Helper methods to convert String to int for API
+    private int convertTemperatureToInt(String temperature) {
+        if (temperature == null) return 0;
+        switch (temperature) {
+            case "Hot": return 0;
+            case "ColdBrew": return 1;
+            case "Ice": return 2;
+            default: return 0;
+        }
+    }
+    
+    private int convertSweetnessToInt(String sweetness) {
+        if (sweetness == null) return 1;
+        switch (sweetness) {
+            case "Sweet": return 0;
+            case "Normal": return 1;
+            case "Less": return 2;
+            case "NoSugar": return 3;
+            default: return 1;
+        }
+    }
+    
+    private int convertMilkTypeToInt(String milkType) {
+        if (milkType == null) return 3;
+        switch (milkType) {
+            case "Dairy": return 0;
+            case "Condensed": return 1;
+            case "Plant": return 2;
+            case "None": return 3;
+            default: return 3;
+        }
     }
 }

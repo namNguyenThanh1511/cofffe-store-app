@@ -1,7 +1,11 @@
 package namnt.vn.coffestore.data.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CartItem {
-    private String id;
+    private String id; // Product ID
+    private String variantId; // Variant ID for API
     private String name;
     private double price;
     private String imageUrl;
@@ -10,6 +14,8 @@ public class CartItem {
     private String temperature; // "Hot", "ColdBrew", "Ice"
     private String sweetness; // "Sweet", "Normal", "Less", "NoSugar"
     private String milkType; // "Dairy", "Condensed", "Plant", "None"
+    private List<String> selectedAddonIds; // List of addon IDs
+    private boolean isSelected; // For checkout selection
 
     public CartItem(String id, String name, double price, String imageUrl, String size, int quantity) {
         this.id = id;
@@ -18,6 +24,7 @@ public class CartItem {
         this.imageUrl = imageUrl;
         this.size = size;
         this.quantity = quantity;
+        this.selectedAddonIds = new ArrayList<>();
     }
     
     public CartItem(String id, String name, double price, String imageUrl, String size, int quantity, 
@@ -31,6 +38,24 @@ public class CartItem {
         this.temperature = temperature;
         this.sweetness = sweetness;
         this.milkType = milkType;
+        this.selectedAddonIds = new ArrayList<>();
+    }
+    
+    // Full constructor with all fields
+    public CartItem(String id, String variantId, String name, double price, String imageUrl, 
+                    String size, int quantity, String temperature, String sweetness, 
+                    String milkType, List<String> selectedAddonIds) {
+        this.id = id;
+        this.variantId = variantId;
+        this.name = name;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.size = size;
+        this.quantity = quantity;
+        this.temperature = temperature;
+        this.sweetness = sweetness;
+        this.milkType = milkType;
+        this.selectedAddonIds = selectedAddonIds != null ? selectedAddonIds : new ArrayList<>();
     }
 
     // Getters
@@ -69,10 +94,34 @@ public class CartItem {
     public String getMilkType() {
         return milkType;
     }
+    
+    public String getVariantId() {
+        return variantId;
+    }
+    
+    public List<String> getSelectedAddonIds() {
+        return selectedAddonIds != null ? selectedAddonIds : new ArrayList<>();
+    }
+    
+    public boolean isSelected() {
+        return isSelected;
+    }
 
     // Setters
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+    
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+    
+    public void setVariantId(String variantId) {
+        this.variantId = variantId;
+    }
+    
+    public void setSelectedAddonIds(List<String> selectedAddonIds) {
+        this.selectedAddonIds = selectedAddonIds;
     }
     
     public void setName(String name) {
