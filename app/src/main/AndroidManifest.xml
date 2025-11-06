@@ -25,6 +25,16 @@
         android:usesCleartextTraffic="true"> <!-- Cho phép HTTP để load ảnh từ internet -->
 
         <activity
+            android:name=".ui.activities.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.CoffeStore.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ui.activities.LoginActivity"
             android:exported="true">
             <!-- Temporarily disabled for testing MenuActivity -->
