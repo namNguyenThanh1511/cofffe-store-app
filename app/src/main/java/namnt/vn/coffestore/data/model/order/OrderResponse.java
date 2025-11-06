@@ -5,7 +5,7 @@ import java.util.List;
 
 public class OrderResponse {
     @SerializedName("id")
-    private String id;
+    private Object id; // Can be int or String
     
     @SerializedName("orderDate")
     private String orderDate;
@@ -24,10 +24,11 @@ public class OrderResponse {
 
     // Getters and Setters
     public String getId() {
-        return id;
+        if (id == null) return null;
+        return id.toString();
     }
 
-    public void setId(String id) {
+    public void setId(Object id) {
         this.id = id;
     }
 

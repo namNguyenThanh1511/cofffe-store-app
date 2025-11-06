@@ -133,7 +133,19 @@ public class CartActivity extends AppCompatActivity {
         String bearerToken = "Bearer " + accessToken;
         Log.d(TAG, "Loading orders from API...");
         
-        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(bearerToken);
+        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(
+                bearerToken,
+                null, // Search
+                null, // SortBy
+                null, // SortOrder
+                null, // Field
+                null, // Statuses
+                null, // DeliveryTypes
+                null, // PaymentStatuses
+                null, // SelectFields
+                null, // PageNumber
+                null  // PageSize
+        );
         call.enqueue(new Callback<ApiResponse<List<OrderResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {

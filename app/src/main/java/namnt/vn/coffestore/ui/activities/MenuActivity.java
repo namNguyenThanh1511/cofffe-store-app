@@ -635,6 +635,12 @@ public class MenuActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ChatActivity.class));
                 return true;
             }
+            if (id == R.id.nav_order) {
+                drawerLayout.closeDrawers();
+                Intent intent = new Intent(this, OrderManagementActivity.class);
+                startActivity(intent);
+                return true;
+            }
             if (id == R.id.nav_logout) {
                 drawerLayout.closeDrawers();
                 authViewModel.logout();
@@ -752,7 +758,19 @@ public class MenuActivity extends AppCompatActivity {
         }
         
         String bearerToken = "Bearer " + accessToken;
-        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(bearerToken);
+        Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(
+                bearerToken,
+                null, // Search
+                null, // SortBy
+                null, // SortOrder
+                null, // Field
+                null, // Statuses
+                null, // DeliveryTypes
+                null, // PaymentStatuses
+                null, // SelectFields
+                null, // PageNumber
+                null  // PageSize
+        );
         call.enqueue(new Callback<ApiResponse<List<OrderResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {

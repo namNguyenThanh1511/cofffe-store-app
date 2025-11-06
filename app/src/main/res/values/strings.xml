@@ -16,6 +16,7 @@
     <string name="menu_home">Home</string>
     <string name="menu_profile">Profile</string>
     <string name="menu_messages">Messages</string>
+    <string name="menu_order">Order</string>
     <string name="menu_logout">Logout</string>
     
     <!-- Product Detail -->

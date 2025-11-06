@@ -51,6 +51,14 @@
             android:name=".ui.activities.ProfileActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity 
+            android:name=".ui.activities.OrderManagementActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity 
+            android:name=".ui.activities.OrderDetailActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.OrderManagementActivity" />
         <!--    <activity android:name=".ui.activities.MainActivity" />-->
     </application>
 

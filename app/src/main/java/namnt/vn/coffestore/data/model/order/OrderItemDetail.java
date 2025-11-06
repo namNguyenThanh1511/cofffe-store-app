@@ -36,8 +36,8 @@ public class OrderItemDetail {
     @SerializedName("milkType")
     private String milkType; // BE returns string: "Dairy", "Condensed", "Plant", "None"
     
-    @SerializedName("addOns")
-    private Object addOns; // Can be array or object
+    @SerializedName("addons")
+    private java.util.List<namnt.vn.coffestore.data.model.Addon> addons;
 
     // Getters and Setters
     public String getId() {
@@ -136,12 +136,12 @@ public class OrderItemDetail {
         this.milkType = milkType;
     }
 
-    public Object getAddOns() {
-        return addOns;
+    public java.util.List<namnt.vn.coffestore.data.model.Addon> getAddons() {
+        return addons;
     }
 
-    public void setAddOns(Object addOns) {
-        this.addOns = addOns;
+    public void setAddons(java.util.List<namnt.vn.coffestore.data.model.Addon> addons) {
+        this.addons = addons;
     }
     
     // Helper methods to convert enum string to Vietnamese

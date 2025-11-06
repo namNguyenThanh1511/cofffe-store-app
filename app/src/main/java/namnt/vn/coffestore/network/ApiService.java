@@ -16,6 +16,8 @@ import retrofit2.http.Headers;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Query;
 import java.util.List;
 
 import namnt.vn.coffestore.data.model.chat.ChatConversation;
@@ -66,10 +68,76 @@ public interface ApiService {
         @Body OrderRequest orderRequest
     );
     
+    // Customer orders (with optional filters)
     @GET("api/orders")
     Call<ApiResponse<List<OrderResponse>>> getOrders(
-        @Header("Authorization") String bearerToken
+        @Header("Authorization") String bearerToken,
+        @Query("Search") String search,
+        @Query("SortBy") String sortBy,
+        @Query("SortOrder") String sortOrder,
+        @Query("Field") String field,
+        @Query("Statuses") List<String> statuses,
+        @Query("DeliveryTypes") List<String> deliveryTypes,
+        @Query("PaymentStatuses") List<String> paymentStatuses,
+        @Query("SelectFields") List<String> selectFields,
+        @Query("PageNumber") Integer pageNumber,
+        @Query("PageSize") Integer pageSize
     );
+
+    // Admin/Barista orders (with optional filters)
+    @GET("api/orders/admin-barista")
+    Call<ApiResponse<List<OrderResponse>>> getOrdersForAdminBarista(
+        @Header("Authorization") String bearerToken,
+        @Query("Search") String search,
+        @Query("SortBy") String sortBy,
+        @Query("SortOrder") String sortOrder,
+        @Query("Field") String field,
+        @Query("Statuses") List<String> statuses,
+        @Query("DeliveryTypes") List<String> deliveryTypes,
+        @Query("PaymentStatuses") List<String> paymentStatuses,
+        @Query("SelectFields") List<String> selectFields,
+        @Query("PageNumber") Integer pageNumber,
+        @Query("PageSize") Integer pageSize
+    );
+    
+    // Get order by ID (Customer)
+    @GET("api/orders/{id}")
+    Call<ApiResponse<OrderResponse>> getOrderById(
+        @Header("Authorization") String bearerToken,
+        @Path("id") String orderId
+    );
+    
+    // Get order by ID (Admin/Barista)
+    @GET("api/orders/admin-barista/{id}")
+    Call<ApiResponse<OrderResponse>> getOrderByIdForAdminBarista(
+        @Header("Authorization") String bearerToken,
+        @Path("id") String orderId
+    );
+
+    // Pay order
+    @POST("api/orders/paying")
+    Call<ApiResponse<String>> payOrder(
+        @Header("Authorization") String bearerToken,
+        @Body namnt.vn.coffestore.data.model.order.PayOrderRequest request
+    );
+
+    // Update order status
+    @PUT("api/orders/status")
+    Call<ApiResponse<OrderResponse>> updateOrderStatus(
+        @Header("Authorization") String bearerToken,
+        @Body namnt.vn.coffestore.data.model.order.UpdateOrderStatusRequest request
+    );
+    
+    // TODO: Add separate API endpoints for admin/barista when available
+    // @GET("api/admin/orders")
+    // Call<ApiResponse<List<OrderResponse>>> getAdminOrders(
+    //     @Header("Authorization") String bearerToken
+    // );
+    // 
+    // @GET("api/barista/orders")
+    // Call<ApiResponse<List<OrderResponse>>> getBaristaOrders(
+    //     @Header("Authorization") String bearerToken
+    // );
     
     @GET("api/addons")
     Call<ApiResponse<List<namnt.vn.coffestore.data.model.Addon>>> getAddons();
