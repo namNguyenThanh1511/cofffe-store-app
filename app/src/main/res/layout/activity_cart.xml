@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
-            android:text="My Cart"
+            android:text="Đơn hàng của tôi"
             android:textColor="@color/text_white"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -84,7 +84,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Your cart is empty"
+            android:text="Chưa có đơn hàng"
             android:textColor="@color/text_gray"
             android:textSize="18sp" />
 
@@ -92,7 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Add some coffee to get started"
+            android:text="Hãy đặt hàng để bắt đầu"
             android:textColor="@color/text_gray"
             android:textSize="14sp" />
     </LinearLayout>

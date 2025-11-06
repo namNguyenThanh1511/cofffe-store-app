@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Quyền mạng & vị trí -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- (TUỲ CHỌN) Khai báo phần cứng vị trí để Play Store hiểu khả năng thiết bị -->
     <!-- Nếu muốn app vẫn cài được trên máy không có GPS, để required="false" -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" /> <!-- NEW -->
     <uses-feature android:name="android.hardware.location.network" android:required="false" /> <!-- NEW -->
+
 
     <application
         android:allowBackup="true"
@@ -29,17 +28,13 @@
             android:name=".ui.activities.LoginActivity"
             android:exported="true">
             <!-- Temporarily disabled for testing MenuActivity -->
-            <!--
-            <intent-filter>
+            <!--<intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
+            </intent-filter>-->
         </activity>
-
         <activity android:name=".ui.activities.RegisterActivity" />
-
-        <activity
+        <activity 
             android:name=".ui.activities.MenuActivity"
             android:exported="true"
             android:theme="@style/Theme.CoffeStore.NoActionBar">
@@ -49,25 +44,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
+        <activity 
             android:name=".ui.activities.ProductDetailActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-
-        <activity
+        <activity 
             android:name=".ui.activities.CartActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-
-        <!-- Màn hiển thị bản đồ OSM -->
+        <activity
+            android:name=".ui.activities.ProfileActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
+        <!--    <activity android:name=".ui.activities.MainActivity" />-->
         <activity
             android:name=".ui.activities.OsmMapActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:exported="false"
             android:parentActivityName=".ui.activities.MenuActivity" />
-
-        <!--    <activity android:name=".ui.activities.MainActivity" />-->
     </application>
 
 </manifest>
