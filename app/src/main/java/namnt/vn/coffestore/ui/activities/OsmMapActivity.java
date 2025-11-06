@@ -38,24 +38,31 @@ import namnt.vn.coffestore.R;
 
 public class OsmMapActivity extends AppCompatActivity {
 
+    // ====== CONFIG ======
+    // Toạ độ quán cà phê cố định (A) — đổi ở đây khi cần
+    private static final double COFFEE_LAT = 10.84142;
+    private static final double COFFEE_LON = 106.81004;
+
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 1;
+
+    // ====== STATE ======
     private MapView mapView;
     private MyLocationNewOverlay locationOverlay;
     private Marker coffeeMarker;
     private Polyline routeLine;
 
-    // Tọa độ quán cà phê cố định (A) — Bạn đã cung cấp
-    private static final double COFFEE_LAT = 10.84142;
-    private static final double COFFEE_LON = 106.81004;
-
-    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 1;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean routeDrawnOnce = false;
+
+    // Auto-update route (poll mỗi 2s)
+    private static final long AUTO_UPDATE_INTERVAL_MS = 2000L;
+    private static final double REDRAW_MIN_DIST_M = 10.0; // đổi route nếu khác >10m
+    private GeoPoint lastDrawnStart = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Cấu hình osmdroid (bắt buộc)
+        // Bắt buộc cho osmdroid (user agent & prefs)
         Configuration.getInstance().load(
                 getApplicationContext(),
                 getSharedPreferences("osm_prefs", MODE_PRIVATE)
@@ -77,63 +84,102 @@ public class OsmMapActivity extends AppCompatActivity {
             });
         }
 
-        // Xin quyền vị trí
+        // Quyền vị trí
         requestPermissionsIfNecessary(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
         });
 
-        // Marker quán A (cố định)
+        // Marker quán (A)
         showCoffeeMarker();
 
-        // Provider vị trí: dùng cả GPS + NETWORK để bắt nhanh hơn
+        // Provider vị trí: dùng cả GPS + NETWORK (emulator/indoor nhanh hơn)
         GpsMyLocationProvider provider = new GpsMyLocationProvider(this);
         provider.addLocationSource(android.location.LocationManager.GPS_PROVIDER);
         provider.addLocationSource(android.location.LocationManager.NETWORK_PROVIDER);
 
-        // Chấm xanh vị trí hiện tại (B)
+        // Overlay chấm xanh (B)
         locationOverlay = new MyLocationNewOverlay(provider, mapView);
         locationOverlay.enableMyLocation();
         locationOverlay.enableFollowLocation();
         mapView.getOverlays().add(locationOverlay);
 
-        // Poll: thử lấy vị trí và vẽ route trong 15s (mỗi 1s)
-        pollForLocationAndDraw(15);
+        // Đợi vị trí lần đầu để vẽ route (tránh vẽ sai về Mỹ)
+        pollForFirstFix(15);
 
-        // Lắng nghe fix đầu tiên: vẽ route 1 lần nếu chưa vẽ
+        // Lắng nghe vị trí: vẽ lại ngay khi có callback từ provider (máy thật)
         provider.startLocationProvider(new IMyLocationConsumer() {
             @Override
             public void onLocationChanged(android.location.Location loc, IMyLocationProvider src) {
                 if (loc == null) return;
-                if (!routeDrawnOnce) {
-                    routeDrawnOnce = true;
-                    GeoPoint me = new GeoPoint(loc.getLatitude(), loc.getLongitude());
-                    GeoPoint coffee = new GeoPoint(COFFEE_LAT, COFFEE_LON);
-                    runOnUiThread(() -> drawRoute(me, coffee));
-                }
+                GeoPoint current = new GeoPoint(loc.getLatitude(), loc.getLongitude());
+                GeoPoint coffee  = new GeoPoint(COFFEE_LAT, COFFEE_LON);
+
+                // Hủy poll cũ để tránh vẽ chồng
+                handler.removeCallbacksAndMessages(null);
+                runOnUiThread(() -> drawRoute(current, coffee));
+                // lưu lại điểm đã vẽ để auto-update không vẽ dư thừa
+                lastDrawnStart = current;
+
+                // Khởi động lại auto-update sau khi vẽ bằng callback
+                startAutoUpdateRoute();
             }
         });
+
+        // Với Emulator: đôi khi không phát sinh callback → bật auto-update định kỳ
+        startAutoUpdateRoute();
     }
 
-    /** Thử lấy myLocation mỗi 1s cho tới khi có, tối đa attempts lần */
-    private void pollForLocationAndDraw(int attempts) {
+    /** Poll mỗi 1s để đợi vị trí đầu tiên; hết thời gian thì chỉ cảnh báo (không vẽ sai) */
+    private void pollForFirstFix(int attempts) {
         handler.postDelayed(() -> {
-            GeoPoint my = locationOverlay != null ? locationOverlay.getMyLocation() : null;
+            GeoPoint my = (locationOverlay != null) ? locationOverlay.getMyLocation() : null;
             if (my != null) {
-                GeoPoint coffee = new GeoPoint(COFFEE_LAT, COFFEE_LON);
-                drawRoute(my, coffee);
-                routeDrawnOnce = true;
+                drawRoute(my, new GeoPoint(COFFEE_LAT, COFFEE_LON));
+                lastDrawnStart = my;
             } else if (attempts > 0) {
-                pollForLocationAndDraw(attempts - 1);
+                pollForFirstFix(attempts - 1);
             } else {
-                Toast.makeText(this,
-                        "Không lấy được vị trí hiện tại. Hãy bật Location hoặc đặt tọa độ trong emulator (… → Location → Set Location).",
-                        Toast.LENGTH_LONG).show();
+                Toast.makeText(
+                        this,
+                        "Chưa lấy được GPS. Bật Location hoặc đặt tọa độ trong Emulator (… → Location → Set Location).",
+                        Toast.LENGTH_LONG
+                ).show();
             }
         }, 1000);
     }
 
-    /** Vẽ marker quán A và focus */
+    // ====== AUTO UPDATE ROUTE (cho emulator và cả máy thật) ======
+    private final Runnable autoUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (locationOverlay != null && locationOverlay.getMyLocation() != null) {
+                    GeoPoint current = locationOverlay.getMyLocation();
+                    if (shouldRedraw(current)) {
+                        drawRoute(current, new GeoPoint(COFFEE_LAT, COFFEE_LON));
+                        lastDrawnStart = current;
+                    }
+                }
+            } finally {
+                // lặp lại
+                handler.postDelayed(this, AUTO_UPDATE_INTERVAL_MS);
+            }
+        }
+    };
+
+    private void startAutoUpdateRoute() {
+        handler.removeCallbacks(autoUpdateRunnable);
+        handler.postDelayed(autoUpdateRunnable, AUTO_UPDATE_INTERVAL_MS);
+    }
+
+    private boolean shouldRedraw(GeoPoint current) {
+        if (lastDrawnStart == null) return true;
+        return current.distanceToAsDouble(lastDrawnStart) > REDRAW_MIN_DIST_M;
+    }
+    // ============================================================
+
+    /** Marker quán A + focus camera về quán (zoom ban đầu) */
     private void showCoffeeMarker() {
         GeoPoint coffeePoint = new GeoPoint(COFFEE_LAT, COFFEE_LON);
         coffeeMarker = new Marker(mapView);
@@ -151,6 +197,7 @@ public class OsmMapActivity extends AppCompatActivity {
     private void drawRoute(GeoPoint start, GeoPoint end) {
         new Thread(() -> {
             try {
+                // OSRM: THỨ TỰ LON,LAT (kinh độ trước, vĩ độ sau)
                 String urlStr = "https://router.project-osrm.org/route/v1/driving/"
                         + start.getLongitude() + "," + start.getLatitude() + ";"
                         + end.getLongitude() + "," + end.getLatitude()
@@ -170,7 +217,9 @@ public class OsmMapActivity extends AppCompatActivity {
                 JSONArray routes = json.optJSONArray("routes");
                 if (routes == null || routes.length() == 0) {
                     Log.e("OSM_ROUTE", "No route found");
-                    runOnUiThread(() -> Toast.makeText(this, "Không tìm thấy tuyến đường.", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() ->
+                            Toast.makeText(this, "Không tìm thấy tuyến đường.", Toast.LENGTH_SHORT).show()
+                    );
                     return;
                 }
 
@@ -188,6 +237,7 @@ public class OsmMapActivity extends AppCompatActivity {
                 polyline.setWidth(6f);
 
                 runOnUiThread(() -> {
+                    // gỡ route cũ (nếu có) rồi mới add mới
                     if (routeLine != null) mapView.getOverlays().remove(routeLine);
                     routeLine = polyline;
                     mapView.getOverlays().add(routeLine);
@@ -202,7 +252,7 @@ public class OsmMapActivity extends AppCompatActivity {
         }).start();
     }
 
-    /** Xin quyền runtime nếu chưa có */
+    /** Quyền runtime */
     private void requestPermissionsIfNecessary(String[] permissions) {
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(this, permission)
@@ -218,6 +268,7 @@ public class OsmMapActivity extends AppCompatActivity {
         super.onResume();
         mapView.onResume();
         if (locationOverlay != null) locationOverlay.enableMyLocation();
+        startAutoUpdateRoute(); // đảm bảo auto-update lại khi quay về
     }
 
     @Override
@@ -225,6 +276,7 @@ public class OsmMapActivity extends AppCompatActivity {
         super.onPause();
         if (locationOverlay != null) locationOverlay.disableMyLocation();
         mapView.onPause();
+        handler.removeCallbacksAndMessages(null); // tránh rò rỉ & vẽ khi activity không hiển thị
     }
 
     @Override
@@ -236,7 +288,7 @@ public class OsmMapActivity extends AppCompatActivity {
             if (granted && locationOverlay != null) {
                 locationOverlay.enableMyLocation();
                 locationOverlay.enableFollowLocation();
-                pollForLocationAndDraw(15);
+                pollForFirstFix(15);
             } else {
                 Toast.makeText(this, "Ứng dụng cần quyền Vị trí để vẽ đường đi.", Toast.LENGTH_LONG).show();
             }
