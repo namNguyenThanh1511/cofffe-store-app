@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CoffeStore</string>
-    
+
     <!-- Menu Activity -->
     <string name="greeting_morning">Good Morning</string>
     <string name="greeting_evening">Good Evening</string>
@@ -13,12 +14,12 @@
     <string name="no_image">Chưa có ảnh</string>
 
     <!-- Navigation -->
-    <string name="menu_home">Home</string>
+    <string name="menu_home">Homepage</string>
     <string name="menu_profile">Profile</string>
     <string name="menu_messages">Messages</string>
     <string name="menu_order">Order</string>
+    <string name="menu_map">Map</string>
     <string name="menu_logout">Logout</string>
-    
     <!-- Product Detail -->
     <string name="coffee_size">Kích cỡ</string>
     <string name="size_small">Nhỏ</string>
@@ -28,4 +29,33 @@
     <string name="read_more">Xem thêm</string>
     <string name="add_to_cart">Đặt hàng</string>
     <string name="product_description">Cappuccino is the richest of all types of coffee types because it uses cream instead of milk... Read More</string>
+
+    <!-- Register V2 -->
+    <string name="r2_back">Back</string>
+    <string name="r2_title">Create Account</string>
+    <string name="r2_fullname">Full name</string>
+    <string name="r2_fullname_hint">Enter your full name</string>
+    <string name="r2_email">Email</string>
+    <string name="r2_email_hint">Enter your email address</string>
+    <string name="r2_phone">Phone number</string>
+    <string name="r2_phone_hint">Enter your phone number</string>
+    <string name="r2_password">Password</string>
+    <string name="r2_password_hint">At least 6 characters</string>
+    <string name="r2_continue">CONTINUE</string>
+    <string name="rv2_err_required">Please fill all fields (password ≥ 6 characters)</string>
+    <string name="rv2_sending_otp">Sending OTP…</string>
+
+    <!-- OTP -->
+    <string name="otp_title">OTP code verification</string>
+    <string name="otp_subtitle">We have sent an OTP to %1$s. Enter the code below to verify.</string>
+    <string name="otp_subtitle_placeholder">We have sent an OTP to your contact. Enter the code below to verify.</string>
+    <string name="otp_not_receive">Didn’t receive it?</string>
+    <string name="otp_can_resend_in_s">You can resend code in …</string>
+    <string name="otp_resend_in_s">You can resend code in %1$d s</string>
+    <string name="otp_resend_now">Tap here to resend</string>
+    <string name="otp_verify">Verify</string>
+    <string name="otp_help_toast">Please check your notification for the OTP.</string>
+    <string name="otp_resend_triggered">Resend requested</string>
+    <string name="otp_expired">OTP expired, please resend</string>
+    <string name="otp_mismatch">OTP does not match</string>
 </resources>

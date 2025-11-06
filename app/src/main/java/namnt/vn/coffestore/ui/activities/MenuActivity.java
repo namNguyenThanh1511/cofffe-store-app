@@ -25,6 +25,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import namnt.vn.coffestore.ui.activities.OsmMapActivity;
+
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -87,10 +89,10 @@ public class MenuActivity extends AppCompatActivity {
             redirectToLogin();
             return;
         }
-        
+
         // Create notification channel
         NotificationHelper.createNotificationChannel(this);
-        
+
         // Request notification permission for Android 13+
         requestNotificationPermission();
 
@@ -100,20 +102,20 @@ public class MenuActivity extends AppCompatActivity {
         setupClickListeners();
         setupNavigationDrawer();
         observeLogout();
-        
+
         // Initialize API service
         apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
-        
+
         // Load products from API
         loadProductsFromApi();
-        
+
         // Load user profile
         loadUserProfile();
-        
+
         // Load cart count
         loadCartCount();
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -156,7 +158,7 @@ public class MenuActivity extends AppCompatActivity {
         menuAdapter.setOnItemClickListener(item -> {
             // Tìm product gốc để lấy variants
             Product selectedProduct = findProductById(item.getId());
-            
+
             // Navigate to ProductDetailActivity
             Intent intent = new Intent(this, ProductDetailActivity.class);
             intent.putExtra("PRODUCT_ID", item.getId());
@@ -168,14 +170,14 @@ public class MenuActivity extends AppCompatActivity {
             }
             intent.putExtra("PRODUCT_IMAGE", item.getImageUrl());
             intent.putExtra("PRODUCT_CATEGORY", item.getCategory());
-            
+
             // Truyền variants dưới dạng JSON string
             if (selectedProduct != null && selectedProduct.getVariants() != null) {
                 Gson gson = new Gson();
                 String variantsJson = gson.toJson(selectedProduct.getVariants());
                 intent.putExtra("PRODUCT_VARIANTS", variantsJson);
             }
-            
+
             startActivity(intent);
         });
     }
@@ -183,7 +185,7 @@ public class MenuActivity extends AppCompatActivity {
     private void loadProductsFromApi() {
         allCoffeeItems = new ArrayList<>();
         allProducts = new ArrayList<>();
-        
+
         Log.d(TAG, "Bắt đầu gọi API /api/products");
         Call<ApiResponse<List<Product>>> call = apiService.getProducts();
         call.enqueue(new Callback<ApiResponse<List<Product>>>() {
@@ -192,17 +194,17 @@ public class MenuActivity extends AppCompatActivity {
                 Log.d(TAG, "Nhận response từ API: " + response.code());
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<List<Product>> apiResponse = response.body();
-                    
+
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
                         List<Product> products = apiResponse.getData();
                         Log.d(TAG, "Số lượng products từ /api/products: " + products.size());
-                        
+
                         // Khởi tạo danh sách rỗng
                         allProducts = new ArrayList<>();
                         allCoffeeItems = new ArrayList<>();
                         totalProductsToLoad = products.size();
                         loadedProductDetailsCount = 0;
-                        
+
                         // Gọi API chi tiết cho từng product
                         for (Product product : products) {
                             loadProductDetails(product.getId());
@@ -227,10 +229,10 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private Product findProductById(String productId) {
         if (allProducts == null || productId == null) return null;
-        
+
         for (Product product : allProducts) {
             if (productId.equals(product.getId())) {
                 return product;
@@ -238,7 +240,7 @@ public class MenuActivity extends AppCompatActivity {
         }
         return null;
     }
-    
+
     private void loadSampleData() {
         allCoffeeItems = new ArrayList<>();
         
@@ -288,35 +290,35 @@ public class MenuActivity extends AppCompatActivity {
             emptyStateLayout.setVisibility(View.GONE);
             rvCoffeeList.setVisibility(View.VISIBLE);
         }
-        
+
         menuAdapter.setCoffeeList(filteredList);
     }
-    
-    
+
+
     private boolean matchOrigin(String productId) {
         if (currentOriginFilter == null) return true; // Show all if no filter
-        
+
         Product product = findProductById(productId);
         if (product == null || product.getOrigin() == null) return false;
-        
+
         return product.getOrigin().equals(currentOriginFilter);
     }
-    
+
     private boolean matchRoastLevel(String productId) {
         if (currentRoastLevelFilter == null) return true; // Show all if no filter
-        
+
         Product product = findProductById(productId);
         if (product == null || product.getRoastLevel() == null) return false;
-        
+
         return product.getRoastLevel().equals(currentRoastLevelFilter);
     }
-    
+
     private boolean matchBrewMethod(String productId) {
         if (currentBrewMethodFilter == null) return true; // Show all if no filter
-        
+
         Product product = findProductById(productId);
         if (product == null || product.getBrewMethod() == null) return false;
-        
+
         return product.getBrewMethod().equals(currentBrewMethodFilter);
     }
 
@@ -328,17 +330,17 @@ public class MenuActivity extends AppCompatActivity {
             public void onResponse(Call<ApiResponse<Product>> call, Response<ApiResponse<Product>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<Product> apiResponse = response.body();
-                    
+
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
                         Product product = apiResponse.getData();
-                        Log.d(TAG, "Nhận chi tiết product: " + product.getName() + 
-                            ", origin: " + product.getOrigin() + 
-                            ", roastLevel: " + product.getRoastLevel() + 
+                        Log.d(TAG, "Nhận chi tiết product: " + product.getName() +
+                            ", origin: " + product.getOrigin() +
+                            ", roastLevel: " + product.getRoastLevel() +
                             ", brewMethod: " + product.getBrewMethod());
-                        
+
                         // Lưu product với đầy đủ thông tin
                         allProducts.add(product);
-                        
+
                         // Convert to CoffeeItem
                         String category = mapAliasToCategory(product.getAlias());
                         CoffeeItem coffeeItem = new CoffeeItem(
@@ -351,7 +353,7 @@ public class MenuActivity extends AppCompatActivity {
                             category
                         );
                         allCoffeeItems.add(coffeeItem);
-                        
+
                         // Kiểm tra đã load xong tất cả chưa
                         loadedProductDetailsCount++;
                         if (loadedProductDetailsCount == totalProductsToLoad) {
@@ -377,10 +379,10 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private String mapAliasToCategory(String alias) {
         if (alias == null) return "Brewed Coffee";
-        
+
         switch (alias.toLowerCase()) {
             case "brewed-coffee":
             case "brewed_coffee":
@@ -394,19 +396,19 @@ public class MenuActivity extends AppCompatActivity {
                 return "Brewed Coffee";
         }
     }
-    
+
     private void onAllProductsLoaded() {
         Log.d(TAG, "Đã load xong " + allProducts.size() + " products với chi tiết đầy đủ");
-        
+
         // Extract unique values từ products đã có đầy đủ thông tin
         extractUniqueOrigins(allProducts);
         extractUniqueRoastLevels(allProducts);
         extractUniqueBrewMethods(allProducts);
-        
+
         // Show all products
         filterCoffee();
     }
-    
+
     private void extractUniqueOrigins(List<Product> products) {
         availableOrigins.clear();
         for (Product product : products) {
@@ -418,11 +420,11 @@ public class MenuActivity extends AppCompatActivity {
         // Sort alphabetically
         java.util.Collections.sort(availableOrigins);
         Log.d(TAG, "Found " + availableOrigins.size() + " unique origins: " + availableOrigins);
-        
+
         // Setup origin spinner after extracting
         setupOriginSpinner();
     }
-    
+
     private void extractUniqueRoastLevels(List<Product> products) {
         availableRoastLevels.clear();
         for (Product product : products) {
@@ -434,11 +436,11 @@ public class MenuActivity extends AppCompatActivity {
         // Sort alphabetically
         java.util.Collections.sort(availableRoastLevels);
         Log.d(TAG, "Found " + availableRoastLevels.size() + " unique roast levels: " + availableRoastLevels);
-        
+
         // Setup roast level spinner after extracting
         setupRoastLevelSpinner();
     }
-    
+
     private void extractUniqueBrewMethods(List<Product> products) {
         availableBrewMethods.clear();
         for (Product product : products) {
@@ -450,21 +452,21 @@ public class MenuActivity extends AppCompatActivity {
         // Sort alphabetically
         java.util.Collections.sort(availableBrewMethods);
         Log.d(TAG, "Found " + availableBrewMethods.size() + " unique brew methods: " + availableBrewMethods);
-        
+
         // Setup brew method spinner after extracting
         setupBrewMethodSpinner();
     }
-    
+
     private void setupOriginSpinner() {
         List<String> originOptions = new ArrayList<>();
         originOptions.add("Tất cả xuất xứ");
         originOptions.addAll(availableOrigins);
-        
-        ArrayAdapter<String> originAdapter = new ArrayAdapter<>(this, 
+
+        ArrayAdapter<String> originAdapter = new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_item, originOptions);
         originAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerOrigin.setAdapter(originAdapter);
-        
+
         spinnerOrigin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -476,33 +478,33 @@ public class MenuActivity extends AppCompatActivity {
                 Log.d(TAG, "Origin filter changed to: " + currentOriginFilter);
                 filterCoffee();
             }
-            
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 currentOriginFilter = null;
             }
         });
     }
-    
+
     private void setupRoastLevelSpinner() {
         // Always use enum values (fixed list)
         List<String> roastLevelData = getRoastLevelEnumValues();
-        
+
         // Convert to Vietnamese for display
         List<String> roastLevelVietnamese = new ArrayList<>();
         for (String enumName : roastLevelData) {
             roastLevelVietnamese.add(roastLevelToVietnamese(enumName));
         }
-        
+
         List<String> roastLevelOptions = new ArrayList<>();
         roastLevelOptions.add("Tất cả độ rang");
         roastLevelOptions.addAll(roastLevelVietnamese);
-        
-        ArrayAdapter<String> roastAdapter = new ArrayAdapter<>(this, 
+
+        ArrayAdapter<String> roastAdapter = new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_item, roastLevelOptions);
         roastAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRoastLevel.setAdapter(roastAdapter);
-        
+
         final List<String> finalRoastLevelData = roastLevelData;
         final List<String> finalRoastLevelVietnamese = roastLevelVietnamese;
         spinnerRoastLevel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -517,33 +519,33 @@ public class MenuActivity extends AppCompatActivity {
                 Log.d(TAG, "Roast level filter changed to: " + currentRoastLevelFilter);
                 filterCoffee();
             }
-            
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 currentRoastLevelFilter = null;
             }
         });
     }
-    
+
     private void setupBrewMethodSpinner() {
         // Always use enum values (fixed list)
         List<String> brewMethodData = getBrewMethodEnumValues();
-        
+
         // Convert to Vietnamese for display
         List<String> brewMethodVietnamese = new ArrayList<>();
         for (String enumName : brewMethodData) {
             brewMethodVietnamese.add(brewMethodToVietnamese(enumName));
         }
-        
+
         List<String> brewMethodOptions = new ArrayList<>();
         brewMethodOptions.add("Tất cả phương pháp");
         brewMethodOptions.addAll(brewMethodVietnamese);
-        
-        ArrayAdapter<String> brewAdapter = new ArrayAdapter<>(this, 
+
+        ArrayAdapter<String> brewAdapter = new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_item, brewMethodOptions);
         brewAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerBrewMethod.setAdapter(brewAdapter);
-        
+
         final List<String> finalBrewMethodData = brewMethodData;
         final List<String> finalBrewMethodVietnamese = brewMethodVietnamese;
         spinnerBrewMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -558,19 +560,19 @@ public class MenuActivity extends AppCompatActivity {
                 Log.d(TAG, "Brew method filter changed to: " + currentBrewMethodFilter);
                 filterCoffee();
             }
-            
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 currentBrewMethodFilter = null;
             }
         });
     }
-    
+
     private void setupSpinners() {
         // Spinners sẽ được setup sau khi load xong products từ API
         // Xem extractUniqueRoastLevels() và extractUniqueBrewMethods()
     }
-    
+
     private void setupClickListeners() {
         ivMenu.setOnClickListener(v -> {
             // Open drawer from right side
@@ -627,7 +629,8 @@ public class MenuActivity extends AppCompatActivity {
             }
             if (id == R.id.nav_profile) {
                 drawerLayout.closeDrawers();
-                // TODO: open profile screen if available
+                Intent intent = new Intent(MenuActivity.this, ProfileActivity.class);
+                startActivity(intent);
                 return true;
             }
             if (id == R.id.nav_messages) {
@@ -641,19 +644,17 @@ public class MenuActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
+            if (id == R.id.nav_map) {
+                drawerLayout.closeDrawers();
+                startActivity(new Intent(
+                        MenuActivity.this,
+                        OsmMapActivity.class
+                ));
+                return true;
+            }
             if (id == R.id.nav_logout) {
                 drawerLayout.closeDrawers();
                 authViewModel.logout();
-                return true;
-            }
-            if (id == R.id.nav_home) {
-                drawerLayout.closeDrawers();
-                return true;
-            }
-            if (id == R.id.nav_profile) {
-                drawerLayout.closeDrawers();
-                Intent intent = new Intent(MenuActivity.this, ProfileActivity.class);
-                startActivity(intent);
                 return true;
             }
             return false;
@@ -683,7 +684,7 @@ public class MenuActivity extends AppCompatActivity {
         }
         return values;
     }
-    
+
     private List<String> getBrewMethodEnumValues() {
         List<String> values = new ArrayList<>();
         for (BrewMethod method : BrewMethod.values()) {
@@ -691,18 +692,18 @@ public class MenuActivity extends AppCompatActivity {
         }
         return values;
     }
-    
+
     // Convert enum name to Vietnamese display name
     private String roastLevelToVietnamese(String enumName) {
         RoastLevel level = RoastLevel.fromString(enumName);
         return level != null ? level.getVietnameseName() : enumName;
     }
-    
+
     private String brewMethodToVietnamese(String enumName) {
         BrewMethod method = BrewMethod.fromString(enumName);
         return method != null ? method.getVietnameseName() : enumName;
     }
-    
+
     // Convert Vietnamese back to enum name for filtering
     private String vietnameseToRoastLevel(String vietnamese) {
         for (RoastLevel level : RoastLevel.values()) {
@@ -712,7 +713,7 @@ public class MenuActivity extends AppCompatActivity {
         }
         return vietnamese;
     }
-    
+
     private String vietnameseToBrewMethod(String vietnamese) {
         for (BrewMethod method : BrewMethod.values()) {
             if (method.getVietnameseName().equals(vietnamese)) {
@@ -721,13 +722,13 @@ public class MenuActivity extends AppCompatActivity {
         }
         return vietnamese;
     }
-    
+
     private void loadUserProfile() {
         String accessToken = authViewModel.getAccessToken();
         if (accessToken.isEmpty()) {
             return;
         }
-        
+
         String bearerToken = "Bearer " + accessToken;
         Call<ApiResponse<UserProfile>> call = apiService.getUserProfile(bearerToken);
         call.enqueue(new Callback<ApiResponse<UserProfile>>() {
@@ -750,13 +751,13 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private void loadCartCount() {
         String accessToken = authViewModel.getAccessToken();
         if (accessToken.isEmpty()) {
             return;
         }
-        
+
         String bearerToken = "Bearer " + accessToken;
         Call<ApiResponse<List<OrderResponse>>> call = apiService.getOrders(
                 bearerToken,
@@ -775,21 +776,21 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderResponse>>> call, Response<ApiResponse<List<OrderResponse>>> response) {
                 Log.d(TAG, "Cart API response code: " + response.code());
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     Log.d(TAG, "Response body success: " + response.body().isSuccess());
-                    
+
                     if (response.body().isSuccess()) {
                         List<OrderResponse> orders = response.body().getData();
                         Log.d(TAG, "Total orders: " + (orders != null ? orders.size() : 0));
-                        
+
                         // Calculate total quantity from ALL orders (no status filter)
                         int totalQuantity = 0;
                         if (orders != null) {
                             for (OrderResponse order : orders) {
-                                Log.d(TAG, "Order ID: " + order.getId() + 
+                                Log.d(TAG, "Order ID: " + order.getId() +
                                       ", Items: " + (order.getOrderItems() != null ? order.getOrderItems().size() : 0));
-                                
+
                                 // Count ALL items from ALL orders
                                 if (order.getOrderItems() != null) {
                                     for (OrderItemDetail item : order.getOrderItems()) {
@@ -800,9 +801,9 @@ public class MenuActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        
+
                         Log.d(TAG, "===== Final cart total quantity: " + totalQuantity + " =====");
-                        
+
                         // Update badge on UI thread
                         final int finalTotal = totalQuantity;
                         runOnUiThread(() -> {
@@ -823,23 +824,23 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private void updateCartBadge(int count) {
         Log.d(TAG, "updateCartBadge called with count: " + count);
         Log.d(TAG, "tvCartBadge is null? " + (tvCartBadge == null));
-        
+
         if (tvCartBadge != null) {
             if (count > 0) {
                 tvCartBadge.setText(String.valueOf(count));
                 tvCartBadge.setVisibility(View.VISIBLE);
                 Log.d(TAG, "Badge text set to: " + count + ", visibility: VISIBLE");
-                
+
                 // Show notification for Stage 2: Has unpaid orders
                 NotificationHelper.updateNotificationStage(this, 2, count);
                 Log.d(TAG, "Notification stage 2 (unpaid) shown with count: " + count);
             } else {
                 tvCartBadge.setVisibility(View.GONE);
-                
+
                 // Stage 1: No orders - Cancel notification
                 NotificationHelper.updateNotificationStage(this, 1, 0);
                 Log.d(TAG, "Notification stage 1 (no orders) - cancelled");
@@ -848,7 +849,7 @@ public class MenuActivity extends AppCompatActivity {
             Log.e(TAG, "tvCartBadge is NULL!");
         }
     }
-    
+
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -856,7 +857,7 @@ public class MenuActivity extends AppCompatActivity {
             }
         }
     }
-    
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -869,7 +870,7 @@ public class MenuActivity extends AppCompatActivity {
             }
         }
     }
-    
+
     private void redirectToLogin() {
         Intent intent = new Intent(this, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
