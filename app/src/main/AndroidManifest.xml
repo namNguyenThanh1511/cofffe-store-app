@@ -6,11 +6,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- (TUỲ CHỌN) Khai báo phần cứng vị trí để Play Store hiểu khả năng thiết bị -->
-    <!-- Nếu muốn app vẫn cài được trên máy không có GPS, để required="false" -->
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" /> <!-- NEW -->
-    <uses-feature android:name="android.hardware.location.network" android:required="false" /> <!-- NEW -->
 
+    <!-- Cho phép cài trên máy không có GPS -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.location.network" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -22,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CoffeStore"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:usesCleartextTraffic="true"> <!-- Cho phép HTTP để load ảnh từ internet -->
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".ui.activities.SplashActivity"
@@ -36,42 +35,46 @@
 
         <activity
             android:name=".ui.activities.LoginActivity"
-            android:exported="true">
-            <!-- Temporarily disabled for testing MenuActivity -->
-            <!--<intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>-->
-        </activity>
+            android:exported="true" />
+
         <activity android:name=".ui.activities.RegisterActivity" />
-        <activity 
+
+        <!-- (TẠM THỜI) bỏ LAUNCHER ở Menu để tránh 2 icon -->
+        <activity
             android:name=".ui.activities.MenuActivity"
             android:exported="true"
-            android:theme="@style/Theme.CoffeStore.NoActionBar">
-            <!-- TEMPORARY: For testing MenuActivity directly -->
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity 
+            android:theme="@style/Theme.CoffeStore.NoActionBar" />
+
+        <activity
             android:name=".ui.activities.ProductDetailActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-        <activity 
+
+        <activity
             android:name=".ui.activities.CartActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
+
         <activity
             android:name=".ui.activities.ProfileActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-        <!--    <activity android:name=".ui.activities.MainActivity" />-->
+
         <activity
             android:name=".ui.activities.OsmMapActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:exported="false"
             android:parentActivityName=".ui.activities.MenuActivity" />
-    </application>
 
+        <activity
+            android:name=".ui.activities.RegisterV2Activity"
+            android:exported="true"
+            android:theme="@style/Theme.CoffeStore.NoActionBar" />
+
+        <activity
+            android:name=".ui.activities.OtpActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CoffeStore.NoActionBar" />
+
+    </application>
 </manifest>
