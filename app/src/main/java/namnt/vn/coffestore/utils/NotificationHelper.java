@@ -13,31 +13,50 @@ import namnt.vn.coffestore.R;
 import namnt.vn.coffestore.ui.activities.CartActivity;
 
 public class NotificationHelper {
-    private static final String CHANNEL_ID = "coffee_cart_channel";
+    private static final String CHANNEL_ID = "coffee_cart_channel_v2"; // Changed ID to force new channel
     private static final String CHANNEL_NAME = "Giỏ hàng";
     private static final String CHANNEL_DESCRIPTION = "Thông báo về đơn hàng trong giỏ";
     private static final int NOTIFICATION_ID = 1001;
+    
+    // Debounce mechanism to prevent duplicate notifications
+    private static long lastNotificationTime = 0;
+    private static final long NOTIFICATION_DEBOUNCE_MS = 1000; // 1 second
 
     public static void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW  // Changed to LOW to disable sound
-            );
-            channel.setDescription(CHANNEL_DESCRIPTION);
-            channel.setShowBadge(true);
-            channel.setSound(null, null);  // Disable notification sound
-            channel.enableVibration(false);  // Disable vibration
-
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             if (notificationManager != null) {
+                // Delete old channel if exists
+                try {
+                    notificationManager.deleteNotificationChannel("coffee_cart_channel");
+                } catch (Exception e) {
+                    // Ignore if channel doesn't exist
+                }
+                
+                // Create new silent channel
+                NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW  // LOW = no sound, no vibration
+                );
+                channel.setDescription(CHANNEL_DESCRIPTION);
+                channel.setShowBadge(true);
+                channel.setSound(null, null);  // Disable notification sound
+                channel.enableVibration(false);  // Disable vibration
+                
                 notificationManager.createNotificationChannel(channel);
             }
         }
     }
 
     public static void showCartNotification(Context context, int itemCount) {
+        // Debounce: prevent duplicate notifications within 1 second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastNotificationTime < NOTIFICATION_DEBOUNCE_MS) {
+            return; // Skip duplicate notification
+        }
+        lastNotificationTime = currentTime;
+        
         // Create intent to open CartActivity when notification is clicked
         Intent intent = new Intent(context, CartActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -94,6 +113,13 @@ public class NotificationHelper {
     }
     
     public static void showPaymentSuccessNotification(Context context) {
+        // Debounce: prevent duplicate notifications within 1 second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastNotificationTime < NOTIFICATION_DEBOUNCE_MS) {
+            return; // Skip duplicate notification
+        }
+        lastNotificationTime = currentTime;
+        
         // Show completion notification (Stage 3: 100%)
         Intent intent = new Intent(context, CartActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
