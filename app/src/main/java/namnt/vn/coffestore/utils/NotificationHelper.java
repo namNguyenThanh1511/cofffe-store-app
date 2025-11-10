@@ -23,10 +23,12 @@ public class NotificationHelper {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW  // Changed to LOW to disable sound
             );
             channel.setDescription(CHANNEL_DESCRIPTION);
             channel.setShowBadge(true);
+            channel.setSound(null, null);  // Disable notification sound
+            channel.enableVibration(false);  // Disable vibration
 
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             if (notificationManager != null) {
@@ -70,12 +72,14 @@ public class NotificationHelper {
             .setContentTitle(title)
             .setContentText(content)
             .setSubText(stageIcon + " " + stageText)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setAutoCancel(false)
             .setOngoing(true) // Make it persistent
             .setNumber(itemCount)
             .setProgress(maxProgress, currentProgress, false) // 50% progress
+            .setSound(null)  // No sound
+            .setVibrate(null)  // No vibration
             .setStyle(new NotificationCompat.BigTextStyle()
                 .bigText(bigText)
                 .setBigContentTitle(title)
@@ -118,11 +122,13 @@ public class NotificationHelper {
             .setContentTitle(title)
             .setContentText(content)
             .setSubText(stageIcon + " " + stageText)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true) // Can be dismissed
             .setOngoing(false)
             .setProgress(maxProgress, currentProgress, false) // 100% progress
+            .setSound(null)  // No sound
+            .setVibrate(null)  // No vibration
             .setStyle(new NotificationCompat.BigTextStyle()
                 .bigText(bigText)
                 .setBigContentTitle(title)

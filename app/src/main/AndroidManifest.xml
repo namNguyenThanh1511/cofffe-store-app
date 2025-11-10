@@ -49,16 +49,36 @@
             android:name=".ui.activities.ProductDetailActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-
         <activity
             android:name=".ui.activities.CartActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
-
         <activity
             android:name=".ui.activities.ProfileActivity"
             android:theme="@style/Theme.CoffeStore.NoActionBar"
             android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity
+            android:name=".ui.activities.OrderBillActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:parentActivityName=".ui.activities.MenuActivity" />
+        <activity
+            android:name=".ui.activities.PaymentWebViewActivity"
+            android:theme="@style/Theme.CoffeStore.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:parentActivityName=".ui.activities.CartActivity">
+            <!-- Deep Link for PayOS redirect -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="mycoffeeapp"
+                    android:host="payos"
+                    android:pathPrefix="/return" />
+            </intent-filter>
+        </activity>
+        <!--    <activity android:name=".ui.activities.MainActivity" />-->
 
         <activity
             android:name=".ui.activities.OsmMapActivity"

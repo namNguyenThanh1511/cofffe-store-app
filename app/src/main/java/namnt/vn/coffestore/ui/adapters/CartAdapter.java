@@ -3,6 +3,7 @@ package namnt.vn.coffestore.ui.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -26,6 +27,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     public interface OnCartItemListener {
         void onQuantityChanged(CartItem item, int newQuantity);
         void onItemRemoved(CartItem item);
+        void onItemSelectionChanged(CartItem item, boolean isSelected);
     }
 
     public CartAdapter() {
@@ -61,12 +63,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     }
 
     static class CartViewHolder extends RecyclerView.ViewHolder {
+        private CheckBox cbSelectItem;
         private ImageView ivCartItemImage, btnDecreaseQty, btnIncreaseQty, btnRemoveItem;
         private TextView tvCartItemName, tvCartItemSize, tvCartItemCustomization, tvCartItemPrice, tvCartItemQty;
 
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
             
+            cbSelectItem = itemView.findViewById(R.id.cbSelectItem);
             ivCartItemImage = itemView.findViewById(R.id.ivCartItemImage);
             btnDecreaseQty = itemView.findViewById(R.id.btnDecreaseQty);
             btnIncreaseQty = itemView.findViewById(R.id.btnIncreaseQty);
@@ -80,6 +84,16 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         }
 
         public void bind(CartItem item, OnCartItemListener listener) {
+            // Set checkbox state
+            cbSelectItem.setOnCheckedChangeListener(null); // Remove listener to avoid trigger
+            cbSelectItem.setChecked(item.isSelected());
+            cbSelectItem.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (listener != null) {
+                    item.setSelected(isChecked);
+                    listener.onItemSelectionChanged(item, isChecked);
+                }
+            });
+            
             tvCartItemName.setText(item.getName());
             
             // Format size display
