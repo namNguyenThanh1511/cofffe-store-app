@@ -243,9 +243,10 @@ public class PaymentWebViewActivity extends AppCompatActivity {
             // URL format: http://localhost:7000/api/payment/payos/return?code=00&id=...
             String code = uri.getQueryParameter("code");
             String id = uri.getQueryParameter("id");
-            
+            String orderCode = uri.getQueryParameter("orderCode");
+            Log.d(TAG,"Payment return url : " + url);
             Log.d(TAG, "Payment return - code: " + code + ", id: " + id);
-            
+
             // Map code to payment status
             // code "00" = success, other = failed
             String paymentStatus;
@@ -254,7 +255,7 @@ public class PaymentWebViewActivity extends AppCompatActivity {
                 
                 // Call API to confirm payment
                 Log.d(TAG, "Payment successful, calling /api/orders/paying...");
-                callConfirmPaymentApi(id, paymentStatus);
+                callConfirmPaymentApi(orderCode, paymentStatus);
             } else {
                 paymentStatus = "UNPAID";
                 // Navigate immediately for failed payment
