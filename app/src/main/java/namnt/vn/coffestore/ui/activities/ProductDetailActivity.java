@@ -528,16 +528,22 @@ public class ProductDetailActivity extends AppCompatActivity {
             quantity = dialogQuantity[0];
             tvQuantity.setText(String.valueOf(quantity));
             
+            Log.d(TAG, "=== CONFIRM DIALOG ===");
+            Log.d(TAG, "Quantity: " + quantity);
+            
             // Collect selected addons
             selectedAddonIds.clear();
             List<String> addonNames = new ArrayList<>();
             for (Addon addon : availableAddons) {
+                Log.d(TAG, "Checking addon: " + addon.getName() + 
+                           " -> selected=" + addon.isSelected() + 
+                           ", price=" + addon.getPrice());
                 if (addon.isSelected()) {
                     selectedAddonIds.add(addon.getId());
                     addonNames.add(addon.getName());
                 }
             }
-            Log.d(TAG, "Selected addons: " + selectedAddonIds.size());
+            Log.d(TAG, "Total selected addons: " + selectedAddonIds.size());
             
             // Display selected addons
             if (!addonNames.isEmpty()) {
@@ -621,6 +627,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         addonLayout.setOnClickListener(v -> {
             addon.setSelected(!addon.isSelected());
             checkbox.setSelected(addon.isSelected());
+            Log.d(TAG, "Addon clicked: " + addon.getName() + 
+                       " -> selected=" + addon.isSelected() + 
+                       ", price=" + addon.getPrice());
         });
         
         return addonLayout;
@@ -650,20 +659,39 @@ public class ProductDetailActivity extends AppCompatActivity {
         
         // Add addons price
         double addonsTotal = 0;
+        Log.d(TAG, "=== UPDATE TOTAL PRICE ===");
+        Log.d(TAG, "Base price: " + productPrice);
+        Log.d(TAG, "Quantity: " + quantity);
+        Log.d(TAG, "Checking " + availableAddons.size() + " addons:");
+        
         for (Addon addon : availableAddons) {
+            Log.d(TAG, "  - " + addon.getName() + 
+                       ": price=" + addon.getPrice() + 
+                       ", selected=" + addon.isSelected());
             if (addon.isSelected()) {
                 addonsTotal += addon.getPrice();
+                Log.d(TAG, "    ✓ Added to total!");
             }
         }
         
         // Total with addons
         total += (addonsTotal * quantity);
         
-        Log.d(TAG, "Price breakdown - Base: " + productPrice + 
-                   ", Addons: " + addonsTotal + 
-                   ", Quantity: " + quantity + 
-                   ", Total: " + total);
+        // Price per item (base + addons)
+        double pricePerItem = productPrice + addonsTotal;
         
+        Log.d(TAG, "=== RESULT ===");
+        Log.d(TAG, "Base price: " + productPrice);
+        Log.d(TAG, "Addons: " + addonsTotal);
+        Log.d(TAG, "Price per item: " + pricePerItem);
+        Log.d(TAG, "Quantity: " + quantity);
+        Log.d(TAG, "Final total: " + total);
+        Log.d(TAG, "================");
+        
+        // Update main price display (per item with addons)
+        tvPrice.setText(CurrencyUtils.formatPrice(pricePerItem));
+        
+        // Update total price display (per item × quantity)
         tvTotalPrice.setText(CurrencyUtils.formatPrice(total));
     }
 
@@ -702,12 +730,29 @@ public class ProductDetailActivity extends AppCompatActivity {
         ProductVariant selectedVariant = variantMap.get(selectedSize);
         String variantId = selectedVariant.getId();
         
-        // Create CartItem
+        // Calculate price per item including addons
+        double pricePerItem = productPrice; // Base price
+        double addonsTotal = 0;
+        for (Addon addon : availableAddons) {
+            if (addon.isSelected()) {
+                addonsTotal += addon.getPrice();
+            }
+        }
+        pricePerItem += addonsTotal;
+        
+        Log.d(TAG, "=== ADD TO CART ===");
+        Log.d(TAG, "Base price: " + productPrice);
+        Log.d(TAG, "Addons total: " + addonsTotal);
+        Log.d(TAG, "Price per item: " + pricePerItem);
+        Log.d(TAG, "Quantity: " + quantity);
+        Log.d(TAG, "Total: " + (pricePerItem * quantity));
+        
+        // Create CartItem with total price including addons
         CartItem cartItem = new CartItem(
             productId,
             variantId,
             productName,
-            productPrice,
+            pricePerItem, // ← Price with addons!
             productImage,
             selectedSize,
             quantity,
