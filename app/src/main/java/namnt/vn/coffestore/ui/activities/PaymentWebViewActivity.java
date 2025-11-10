@@ -12,9 +12,20 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import namnt.vn.coffestore.R;
+import namnt.vn.coffestore.data.model.api.ApiResponse;
+import namnt.vn.coffestore.data.model.order.PayingRequest;
+import namnt.vn.coffestore.network.ApiService;
+import namnt.vn.coffestore.network.RetrofitClient;
+import namnt.vn.coffestore.viewmodel.AuthViewModel;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import android.util.Log;
 
 public class PaymentWebViewActivity extends AppCompatActivity {
     private static final String TAG = "PaymentWebViewActivity";
@@ -26,11 +37,23 @@ public class PaymentWebViewActivity extends AppCompatActivity {
     private ImageView btnBack;
     
     private String orderResponseJson;
+    private ApiService apiService;
+    private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_webview);
+
+        // Initialize API service and AuthViewModel
+        apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        authViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new AuthViewModel(getApplication());
+            }
+        }).get(AuthViewModel.class);
 
         initViews();
         
@@ -221,33 +244,80 @@ public class PaymentWebViewActivity extends AppCompatActivity {
             String code = uri.getQueryParameter("code");
             String id = uri.getQueryParameter("id");
             
+            Log.d(TAG, "Payment return - code: " + code + ", id: " + id);
+            
             // Map code to payment status
             // code "00" = success, other = failed
             String paymentStatus;
             if ("00".equals(code)) {
                 paymentStatus = "PAID";
+                
+                // Call API to confirm payment
+                Log.d(TAG, "Payment successful, calling /api/orders/paying...");
+                callConfirmPaymentApi(id, paymentStatus);
             } else {
                 paymentStatus = "UNPAID";
+                // Navigate immediately for failed payment
+                navigateToOrderBill(paymentStatus, id);
             }
-            
-            // Navigate to OrderBillActivity with payment result
-            Intent intent = new Intent(this, OrderBillActivity.class);
-            intent.putExtra(OrderBillActivity.EXTRA_ORDER_RESPONSE, orderResponseJson);
-            intent.putExtra("payment_status", paymentStatus);
-            intent.putExtra("order_code", id);
-            intent.putExtra("payment_cancelled", "false");
-            startActivity(intent);
-            
-            // Clear saved order data
-            getSharedPreferences("payment_prefs", MODE_PRIVATE)
-                .edit()
-                .remove("pending_order_response")
-                .apply();
-            
-            finish();
         } catch (Exception e) {
+            Log.e(TAG, "Error handling payment return: " + e.getMessage());
             Toast.makeText(this, "Lỗi xử lý kết quả thanh toán", Toast.LENGTH_SHORT).show();
         }
+    }
+    
+    private void callConfirmPaymentApi(String orderCode, String paymentStatus) {
+        String accessToken = authViewModel.getAccessToken();
+        if (accessToken.isEmpty()) {
+            Log.e(TAG, "Access token is empty, navigating without API call");
+            navigateToOrderBill(paymentStatus, orderCode);
+            return;
+        }
+        
+        String bearerToken = "Bearer " + accessToken;
+        PayingRequest request = new PayingRequest(orderCode);
+        
+        Log.d(TAG, "Calling confirmPayment API with orderCode: " + orderCode);
+        Call<ApiResponse<String>> call = apiService.confirmPayment(bearerToken, request);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "✓ Payment confirmation API success: " + response.body().getMessage());
+                } else {
+                    Log.e(TAG, "Payment confirmation API failed: " + response.code());
+                }
+                
+                // Navigate regardless of API result
+                navigateToOrderBill(paymentStatus, orderCode);
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Log.e(TAG, "Payment confirmation API error: " + t.getMessage());
+                
+                // Navigate even if API fails
+                navigateToOrderBill(paymentStatus, orderCode);
+            }
+        });
+    }
+    
+    private void navigateToOrderBill(String paymentStatus, String orderCode) {
+        // Navigate to OrderBillActivity with payment result
+        Intent intent = new Intent(this, OrderBillActivity.class);
+        intent.putExtra(OrderBillActivity.EXTRA_ORDER_RESPONSE, orderResponseJson);
+        intent.putExtra("payment_status", paymentStatus);
+        intent.putExtra("order_code", orderCode);
+        intent.putExtra("payment_cancelled", "false");
+        startActivity(intent);
+        
+        // Clear saved order data
+        getSharedPreferences("payment_prefs", MODE_PRIVATE)
+            .edit()
+            .remove("pending_order_response")
+            .apply();
+        
+        finish();
     }
     
     private void handlePaymentCancel(String url) {

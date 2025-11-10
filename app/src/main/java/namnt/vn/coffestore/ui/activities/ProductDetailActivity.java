@@ -67,7 +67,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private Double productOldPrice;
     
     private int quantity = 1;
-    private String selectedSize = "M"; // Default size
+    private String selectedSize = null; // Will be set to cheapest variant
     private int selectedTemperature = 0; // Default: 0=Hot
     private int selectedSweetness = 1; // Default: 1=Normal
     private int selectedMilkType = 0; // Default: 0=Dairy
@@ -165,11 +165,41 @@ public class ProductDetailActivity extends AppCompatActivity {
             tvDescription.setText(productDescription);
         }
 
-        // Set initial price from selected size variant
-        if (variantMap != null && variantMap.containsKey(selectedSize)) {
-            productPrice = variantMap.get(selectedSize).getBasePrice();
+        // Find and set default size to the variant with minPrice
+        if (variantMap != null && !variantMap.isEmpty()) {
+            Log.d(TAG, "Finding default variant. Product price (minPrice): " + productPrice);
+            
+            // Find variant with price matching productPrice (minPrice from menu)
+            ProductVariant defaultVariant = null;
+            for (Map.Entry<String, ProductVariant> entry : variantMap.entrySet()) {
+                Log.d(TAG, "  Variant " + entry.getKey() + " price: " + entry.getValue().getBasePrice());
+                if (Math.abs(entry.getValue().getBasePrice() - productPrice) < 0.01) {
+                    defaultVariant = entry.getValue();
+                    selectedSize = entry.getKey();
+                    Log.d(TAG, "  ✓ Matched! Default size: " + selectedSize);
+                    break;
+                }
+            }
+            
+            // If no match found, use the cheapest variant
+            if (defaultVariant == null) {
+                Log.d(TAG, "No exact match, finding cheapest variant...");
+                double minPrice = Double.MAX_VALUE;
+                for (Map.Entry<String, ProductVariant> entry : variantMap.entrySet()) {
+                    if (entry.getValue().getBasePrice() < minPrice) {
+                        minPrice = entry.getValue().getBasePrice();
+                        selectedSize = entry.getKey();
+                        defaultVariant = entry.getValue();
+                    }
+                }
+                if (defaultVariant != null) {
+                    productPrice = defaultVariant.getBasePrice();
+                    Log.d(TAG, "  ✓ Cheapest variant: " + selectedSize + " at " + productPrice);
+                }
+            }
         }
         tvPrice.setText(CurrencyUtils.formatPrice(productPrice));
+        Log.d(TAG, "Final selected size: " + selectedSize + ", price: " + productPrice);
         
         if (productOldPrice != null && productOldPrice > 0) {
             tvOldPrice.setVisibility(TextView.VISIBLE);
@@ -278,6 +308,30 @@ public class ProductDetailActivity extends AppCompatActivity {
         ImageView checkSizeSmall = dialog.findViewById(R.id.checkSizeSmall);
         ImageView checkSizeMedium = dialog.findViewById(R.id.checkSizeMedium);
         ImageView checkSizeLarge = dialog.findViewById(R.id.checkSizeLarge);
+        TextView tvPriceSmall = dialog.findViewById(R.id.tvPriceSmall);
+        TextView tvPriceMedium = dialog.findViewById(R.id.tvPriceMedium);
+        TextView tvPriceLarge = dialog.findViewById(R.id.tvPriceLarge);
+        
+        // Display prices for each size from variants
+        if (variantMap != null) {
+            if (variantMap.containsKey("S")) {
+                tvPriceSmall.setText(CurrencyUtils.formatPrice(variantMap.get("S").getBasePrice()));
+            } else {
+                btnDialogSizeSmall.setVisibility(View.GONE);
+            }
+            
+            if (variantMap.containsKey("M")) {
+                tvPriceMedium.setText(CurrencyUtils.formatPrice(variantMap.get("M").getBasePrice()));
+            } else {
+                btnDialogSizeMedium.setVisibility(View.GONE);
+            }
+            
+            if (variantMap.containsKey("L")) {
+                tvPriceLarge.setText(CurrencyUtils.formatPrice(variantMap.get("L").getBasePrice()));
+            } else {
+                btnDialogSizeLarge.setVisibility(View.GONE);
+            }
+        }
         
         // Temperature
         View btnDialogTempHot = dialog.findViewById(R.id.btnDialogTempHot);
@@ -317,9 +371,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         com.google.android.material.button.MaterialButton btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
         
         // Set current selections - Size
-        checkSizeSmall.setSelected(selectedSize.equals("S"));
-        checkSizeMedium.setSelected(selectedSize.equals("M"));
-        checkSizeLarge.setSelected(selectedSize.equals("L"));
+        checkSizeSmall.setSelected("S".equals(selectedSize));
+        checkSizeMedium.setSelected("M".equals(selectedSize));
+        checkSizeLarge.setSelected("L".equals(selectedSize));
         
         // Temperature
         checkTempHot.setSelected(selectedTemperature == 0);

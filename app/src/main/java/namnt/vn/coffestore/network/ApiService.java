@@ -56,4 +56,10 @@ public interface ApiService {
     Call<ApiResponse<namnt.vn.coffestore.data.model.UserProfile>> getUserProfile(
         @Header("Authorization") String bearerToken
     );
+    
+    @POST("api/orders/paying")
+    Call<ApiResponse<String>> confirmPayment(
+        @Header("Authorization") String bearerToken,
+        @Body namnt.vn.coffestore.data.model.order.PayingRequest payingRequest
+    );
 }
