@@ -11,11 +11,11 @@
             android:id="@+id/nav_order_history"
             android:title="Lịch sử giao dịch" />
         <item
-            android:id="@+id/nav_logout"
-            android:title="@string/menu_logout" />
-        <item
             android:id="@+id/nav_map"
             android:title="@string/menu_map" />
+        <item
+            android:id="@+id/nav_logout"
+            android:title="@string/menu_logout" />
 
     </group>
 </menu>

@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
 
             // Register button listener (was missing)
             btnRegister.setOnClickListener(v -> {
-                startActivity(new Intent(this, RegisterActivity.class));
+                startActivity(new Intent(this, RegisterV2Activity.class));
             });
 
             // Observe auth result (fix: use Observer<AuthResult> and null check)

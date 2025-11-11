@@ -201,4 +201,76 @@ public class NotificationHelper {
             notificationManager.cancel(NOTIFICATION_ID);
         }
     }
+
+    private static final String OTP_CHANNEL_ID = "coffee_otp_channel";
+    private static final String OTP_CHANNEL_NAME = "OTP";
+    private static final String OTP_CHANNEL_DESCRIPTION = "Thông báo mã OTP đăng ký";
+    private static final int OTP_NOTIFICATION_ID = 2001;
+
+    /**
+     * Tạo kênh OTP riêng. Không sửa createNotificationChannel() cũ để tránh conflict.
+     */
+    public static void createOtpChannelIfNeeded(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager nm = context.getSystemService(NotificationManager.class);
+        if (nm == null) return;
+
+        NotificationChannel otpChannel = new NotificationChannel(
+                OTP_CHANNEL_ID,
+                OTP_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        otpChannel.setDescription(OTP_CHANNEL_DESCRIPTION);
+        otpChannel.setShowBadge(true);
+        nm.createNotificationChannel(otpChannel);
+    }
+
+    /**
+     * Gửi thông báo OTP cục bộ (local) — không cần API/FCM.
+     * Chỉ nhận vào chuỗi OTP + hạn; icon tái sử dụng ic_cart để không thêm tài nguyên.
+     *
+     * @param context      Context
+     * @param otp          Mã OTP 6 chữ số (ví dụ "123456")
+     * @param expiresAtMs  Epoch millis hết hạn (ví dụ now + 5 phút)
+     * @param identifier   Email/Phone để hiển thị thêm (có thể null)
+     */
+    public static void showOtpNotification(Context context, String otp, long expiresAtMs, String identifier) {
+        // đảm bảo kênh OTP tồn tại
+        createOtpChannelIfNeeded(context);
+
+        // Tạo nội dung hiển thị
+        String title = "OTP code verification";
+        String idText = (identifier == null || identifier.isEmpty()) ? "" : (" (" + identifier + ")");
+        String content = "Your OTP: " + otp + idText;
+        String bigText = "Use this code to verify your registration.\n"
+                + "OTP: " + otp + "\n"
+                + "Expires soon.";
+
+        // (Không mở Activity khi bấm — test đơn giản)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, OTP_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cart) // dùng icon có sẵn để tránh thêm resource
+                .setContentTitle(title)
+                .setContentText(content)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(bigText)
+                        .setBigContentTitle(title)
+                        .setSummaryText("CoffeStore"))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) {
+            nm.notify(OTP_NOTIFICATION_ID, builder.build());
+        }
+    }
+
+    /**
+     * Hủy thông báo OTP (nếu cần).
+     */
+    public static void cancelOtpNotification(Context context) {
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) {
+            nm.cancel(OTP_NOTIFICATION_ID);
+        }
+    }
 }
