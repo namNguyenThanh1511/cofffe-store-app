@@ -15,6 +15,7 @@ import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 import java.util.List;
 
@@ -46,7 +47,11 @@ public interface ApiService {
     
     @GET("api/orders")
     Call<ApiResponse<List<OrderResponse>>> getOrders(
-        @Header("Authorization") String bearerToken
+        @Header("Authorization") String bearerToken,
+        @Query("Search") String search,
+        @Query("SortBy") String sortBy,
+        @Query("SortOrder") String sortOrder,
+        @Query("Statuses") String statuses
     );
     
     @GET("api/addons")

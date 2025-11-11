@@ -36,7 +36,7 @@ public class OrderItemDetail {
     @SerializedName("milkType")
     private String milkType; // BE returns string: "Dairy", "Condensed", "Plant", "None"
     
-    @SerializedName("addOns")
+    @SerializedName("addons")
     private Object addOns; // Can be array or object
 
     // Getters and Setters

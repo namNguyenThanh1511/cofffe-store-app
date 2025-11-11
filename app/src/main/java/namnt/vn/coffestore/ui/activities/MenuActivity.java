@@ -657,6 +657,12 @@ public class MenuActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
+            if (id == R.id.nav_order_history) {
+                drawerLayout.closeDrawers();
+                Intent intent = new Intent(MenuActivity.this, OrderHistoryActivity.class);
+                startActivity(intent);
+                return true;
+            }
             return false;
         });
     }

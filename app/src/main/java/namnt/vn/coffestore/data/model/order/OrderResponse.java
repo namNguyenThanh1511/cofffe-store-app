@@ -19,6 +19,9 @@ public class OrderResponse {
     @SerializedName("customerId")
     private String customerId;
     
+    @SerializedName("deliveryType")
+    private String deliveryType;
+    
     @SerializedName("orderItems")
     private List<OrderItemDetail> orderItems;
 
@@ -61,6 +64,14 @@ public class OrderResponse {
 
     public void setCustomerId(String customerId) {
         this.customerId = customerId;
+    }
+
+    public String getDeliveryType() {
+        return deliveryType;
+    }
+
+    public void setDeliveryType(String deliveryType) {
+        this.deliveryType = deliveryType;
     }
 
     public List<OrderItemDetail> getOrderItems() {

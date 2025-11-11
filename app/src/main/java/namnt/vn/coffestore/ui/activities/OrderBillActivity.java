@@ -91,6 +91,36 @@ public class OrderBillActivity extends AppCompatActivity {
         boolean isFailed = "FAILED".equalsIgnoreCase(transactionType);
         boolean isTransactionCancelled = "CANCELLED".equalsIgnoreCase(transactionType);
         
+        // If no payment status from payment flow, check order status from API
+        if (paymentStatus == null && transactionType == null && orderResponse != null) {
+            String orderStatus = orderResponse.getStatus();
+            if (orderStatus != null) {
+                if ("COMPLETED".equalsIgnoreCase(orderStatus)) {
+                    // Order completed - show success
+                    tvPaymentStatus.setText("✓");
+                    tvPaymentStatus.setBackgroundResource(R.drawable.bg_success_circle);
+                    tvPaymentMessage.setText("Đơn hàng hoàn thành!");
+                    tvPaymentMessage.setTextColor(getResources().getColor(R.color.text_white));
+                    return;
+                } else if ("PROCESSING".equalsIgnoreCase(orderStatus)) {
+                    // Order processing - show pending
+                    tvPaymentStatus.setText("⏳");
+                    tvPaymentStatus.setBackgroundResource(R.drawable.bg_pending_circle);
+                    tvPaymentMessage.setText("Đang xử lý đơn hàng...");
+                    tvPaymentMessage.setTextColor(getResources().getColor(R.color.text_gray));
+                    return;
+                } else if ("CANCELLED".equalsIgnoreCase(orderStatus)) {
+                    // Order cancelled
+                    tvPaymentStatus.setText("⊗");
+                    tvPaymentStatus.setBackgroundResource(R.drawable.bg_cancelled_circle);
+                    tvPaymentMessage.setText("Đã hủy đơn hàng!");
+                    tvPaymentMessage.setTextColor(getResources().getColor(R.color.text_gray));
+                    return;
+                }
+            }
+        }
+        
+        // Original payment flow logic
         if (isPaid || isSuccess) {
             // Payment successful
             tvPaymentStatus.setText("✓");
@@ -184,12 +214,10 @@ public class OrderBillActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
 
         btnViewOrders.setOnClickListener(v -> {
-            // TODO: Navigate to OrderManagementActivity when it's created
-            // For now, go back to MenuActivity
-            Intent intent = new Intent(this, MenuActivity.class);
+            // Navigate to Order History
+            Intent intent = new Intent(this, OrderHistoryActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
-            finish();
         });
     }
 }

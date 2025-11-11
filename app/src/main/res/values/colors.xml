@@ -36,6 +36,10 @@
     <!-- Text -->
     <color name="text_primary_light">#FFFFFF</color>
     <color name="text_secondary_light">#D3B8A3</color>
+    <color name="text_secondary">#B8B8B8</color>
+
+    <!-- Background -->
+    <color name="background_dark">#1A0F0A</color>
 
     <!-- Button colors -->
     <color name="btn_login_bg">#E6B480</color>   <!-- caramel sáng -->

@@ -60,8 +60,13 @@ public class BillItemAdapter extends RecyclerView.Adapter<BillItemAdapter.BillIt
         }
 
         public void bind(OrderItemDetail item) {
-            // Product name (you might need to fetch from API or pass from cart)
-            tvItemName.setText(item.getProductId() != null ? "Sản phẩm" : "N/A");
+            // Product name from ProductWithVariant
+            String productName = "Sản phẩm";
+            if (item.getProductsWithVariant() != null && 
+                item.getProductsWithVariant().getProductName() != null) {
+                productName = item.getProductsWithVariant().getProductName();
+            }
+            tvItemName.setText(productName);
             
             // Quantity
             tvItemQuantity.setText("x" + item.getQuantity());
@@ -86,7 +91,13 @@ public class BillItemAdapter extends RecyclerView.Adapter<BillItemAdapter.BillIt
             }
             
             if (item.getMilkType() != null && !item.getMilkType().isEmpty()) {
-                customizations.append("• ").append(getMilkTypeText(item.getMilkType()));
+                customizations.append("• ").append(getMilkTypeText(item.getMilkType())).append("\n");
+            }
+            
+            // Add-ons/Toppings
+            String addonsText = parseAddons(item.getAddOns());
+            if (!addonsText.isEmpty()) {
+                customizations.append(addonsText);
             }
             
             if (customizations.length() > 0) {
@@ -94,6 +105,63 @@ public class BillItemAdapter extends RecyclerView.Adapter<BillItemAdapter.BillIt
                 tvItemCustomizations.setVisibility(View.VISIBLE);
             } else {
                 tvItemCustomizations.setVisibility(View.GONE);
+            }
+        }
+        
+        private String parseAddons(Object addOnsObj) {
+            if (addOnsObj == null) {
+                android.util.Log.d("BillItemAdapter", "addOnsObj is null");
+                return "";
+            }
+            
+            try {
+                // Parse addons JSON
+                com.google.gson.Gson gson = new com.google.gson.Gson();
+                String json = gson.toJson(addOnsObj);
+                
+                android.util.Log.d("BillItemAdapter", "Addons JSON: " + json);
+                
+                // Try to parse as array (compatible with older Gson versions)
+                com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+                com.google.gson.JsonElement element = parser.parse(json);
+                
+                if (!element.isJsonArray()) {
+                    android.util.Log.d("BillItemAdapter", "Not a JSON array");
+                    return "";
+                }
+                
+                com.google.gson.JsonArray jsonArray = element.getAsJsonArray();
+                
+                android.util.Log.d("BillItemAdapter", "Array size: " + jsonArray.size());
+                
+                if (jsonArray.size() == 0) return "";
+                
+                StringBuilder addonsText = new StringBuilder();
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    com.google.gson.JsonObject addonObj = jsonArray.get(i).getAsJsonObject();
+                    
+                    String name = addonObj.has("name") ? addonObj.get("name").getAsString() : "";
+                    double price = addonObj.has("price") ? addonObj.get("price").getAsDouble() : 0;
+                    
+                    android.util.Log.d("BillItemAdapter", "Addon: " + name + " - " + price);
+                    
+                    if (!name.isEmpty()) {
+                        addonsText.append("• ").append(name);
+                        if (price > 0) {
+                            addonsText.append(" (+").append(CurrencyUtils.formatPrice(price)).append(")");
+                        }
+                        addonsText.append("\n");
+                    }
+                }
+                
+                android.util.Log.d("BillItemAdapter", "Final addons text: " + addonsText.toString());
+                
+                return addonsText.toString();
+            } catch (Exception e) {
+                // If parsing fails, return empty
+                android.util.Log.e("BillItemAdapter", "Error parsing addons: " + e.getMessage());
+                e.printStackTrace();
+                return "";
             }
         }
 
