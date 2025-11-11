@@ -3,6 +3,7 @@ package namnt.vn.coffestore.data.model;
 public class CoffeeItem {
     private String id;
     private String name;
+    private String description;
     private double price;
     private Double oldPrice;
     private String imageUrl;
@@ -11,6 +12,16 @@ public class CoffeeItem {
     public CoffeeItem(String id, String name, double price, Double oldPrice, String imageUrl, String category) {
         this.id = id;
         this.name = name;
+        this.price = price;
+        this.oldPrice = oldPrice;
+        this.imageUrl = imageUrl;
+        this.category = category;
+    }
+
+    public CoffeeItem(String id, String name, String description, double price, Double oldPrice, String imageUrl, String category) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
         this.price = price;
         this.oldPrice = oldPrice;
         this.imageUrl = imageUrl;
@@ -64,5 +75,13 @@ public class CoffeeItem {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

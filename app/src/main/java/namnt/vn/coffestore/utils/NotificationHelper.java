@@ -1,0 +1,276 @@
+package namnt.vn.coffestore.utils;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+
+import androidx.core.app.NotificationCompat;
+
+import namnt.vn.coffestore.R;
+import namnt.vn.coffestore.ui.activities.CartActivity;
+
+public class NotificationHelper {
+    private static final String CHANNEL_ID = "coffee_cart_channel_v2"; // Changed ID to force new channel
+    private static final String CHANNEL_NAME = "Giỏ hàng";
+    private static final String CHANNEL_DESCRIPTION = "Thông báo về đơn hàng trong giỏ";
+    private static final int NOTIFICATION_ID = 1001;
+    
+    // Debounce mechanism to prevent duplicate notifications
+    private static long lastNotificationTime = 0;
+    private static final long NOTIFICATION_DEBOUNCE_MS = 1000; // 1 second
+
+    public static void createNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                // Delete old channel if exists
+                try {
+                    notificationManager.deleteNotificationChannel("coffee_cart_channel");
+                } catch (Exception e) {
+                    // Ignore if channel doesn't exist
+                }
+                
+                // Create new silent channel
+                NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW  // LOW = no sound, no vibration
+                );
+                channel.setDescription(CHANNEL_DESCRIPTION);
+                channel.setShowBadge(true);
+                channel.setSound(null, null);  // Disable notification sound
+                channel.enableVibration(false);  // Disable vibration
+                
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    public static void showCartNotification(Context context, int itemCount) {
+        // Debounce: prevent duplicate notifications within 1 second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastNotificationTime < NOTIFICATION_DEBOUNCE_MS) {
+            return; // Skip duplicate notification
+        }
+        lastNotificationTime = currentTime;
+        
+        // Create intent to open CartActivity when notification is clicked
+        Intent intent = new Intent(context, CartActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Determine payment stage (3 stages)
+        // Stage 1: No items (0% - hidden notification)
+        // Stage 2: Has unpaid items (50% - show notification)
+        // Stage 3: All paid (100% - show success, then hide)
+        
+        int maxProgress = 100;
+        int currentProgress = 50; // Stage 2: Has unpaid items
+        String stageIcon = "🏃";
+        String stageText = "Đang chờ thanh toán";
+        String title = "🛒 Giỏ hàng của bạn";
+        String content = itemCount + " sản phẩm đang chờ thanh toán";
+        String bigText = "🏃 Giai đoạn 2/3: Đã có đơn hàng\n\n" +
+                        "✓ Bước 1: Đã thêm " + itemCount + " sản phẩm vào giỏ\n" +
+                        "▶ Bước 2: Đang chờ thanh toán\n" +
+                        "○ Bước 3: Hoàn tất đơn hàng\n\n" +
+                        "Nhấn để tiếp tục thanh toán!";
+        
+        // Build notification with progress bar
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_cart)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSubText(stageIcon + " " + stageText)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(false)
+            .setOngoing(true) // Make it persistent
+            .setNumber(itemCount)
+            .setProgress(maxProgress, currentProgress, false) // 50% progress
+            .setSound(null)  // No sound
+            .setVibrate(null)  // No vibration
+            .setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(bigText)
+                .setBigContentTitle(title)
+                .setSummaryText(stageIcon + " Tiến độ: " + currentProgress + "%"));
+
+        // Show notification
+        NotificationManager notificationManager = 
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
+    }
+    
+    public static void showPaymentSuccessNotification(Context context) {
+        // Debounce: prevent duplicate notifications within 1 second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastNotificationTime < NOTIFICATION_DEBOUNCE_MS) {
+            return; // Skip duplicate notification
+        }
+        lastNotificationTime = currentTime;
+        
+        // Show completion notification (Stage 3: 100%)
+        Intent intent = new Intent(context, CartActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        int maxProgress = 100;
+        int currentProgress = 100; // Stage 3: Payment complete
+        String stageIcon = "🏁";
+        String stageText = "Hoàn thành";
+        String title = "✅ Thanh toán thành công!";
+        String content = "Đơn hàng của bạn đã được xác nhận";
+        String bigText = "🏁 Giai đoạn 3/3: Hoàn tất\n\n" +
+                        "✓ Bước 1: Đã thêm sản phẩm vào giỏ\n" +
+                        "✓ Bước 2: Đã thanh toán\n" +
+                        "✓ Bước 3: Hoàn tất đơn hàng\n\n" +
+                        "Cảm ơn bạn đã đặt hàng!";
+        
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_cart)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSubText(stageIcon + " " + stageText)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true) // Can be dismissed
+            .setOngoing(false)
+            .setProgress(maxProgress, currentProgress, false) // 100% progress
+            .setSound(null)  // No sound
+            .setVibrate(null)  // No vibration
+            .setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(bigText)
+                .setBigContentTitle(title)
+                .setSummaryText(stageIcon + " Tiến độ: " + currentProgress + "%"));
+
+        NotificationManager notificationManager = 
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+        }
+    }
+
+    /**
+     * Update notification based on payment stage
+     * @param context Application context
+     * @param stage Payment stage (1: No orders, 2: Unpaid orders, 3: Paid)
+     * @param itemCount Number of items in cart
+     */
+    public static void updateNotificationStage(Context context, int stage, int itemCount) {
+        switch (stage) {
+            case 1:
+                // Stage 1: No orders - Cancel notification
+                cancelCartNotification(context);
+                break;
+            case 2:
+                // Stage 2: Has unpaid orders - Show cart notification
+                showCartNotification(context, itemCount);
+                break;
+            case 3:
+                // Stage 3: Payment completed - Show success notification
+                showPaymentSuccessNotification(context);
+                // Auto dismiss after 3 seconds
+                new android.os.Handler().postDelayed(() -> {
+                    cancelCartNotification(context);
+                }, 3000);
+                break;
+        }
+    }
+    
+    public static void cancelCartNotification(Context context) {
+        NotificationManager notificationManager = 
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(NOTIFICATION_ID);
+        }
+    }
+
+    private static final String OTP_CHANNEL_ID = "coffee_otp_channel";
+    private static final String OTP_CHANNEL_NAME = "OTP";
+    private static final String OTP_CHANNEL_DESCRIPTION = "Thông báo mã OTP đăng ký";
+    private static final int OTP_NOTIFICATION_ID = 2001;
+
+    /**
+     * Tạo kênh OTP riêng. Không sửa createNotificationChannel() cũ để tránh conflict.
+     */
+    public static void createOtpChannelIfNeeded(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager nm = context.getSystemService(NotificationManager.class);
+        if (nm == null) return;
+
+        NotificationChannel otpChannel = new NotificationChannel(
+                OTP_CHANNEL_ID,
+                OTP_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        otpChannel.setDescription(OTP_CHANNEL_DESCRIPTION);
+        otpChannel.setShowBadge(true);
+        nm.createNotificationChannel(otpChannel);
+    }
+
+    /**
+     * Gửi thông báo OTP cục bộ (local) — không cần API/FCM.
+     * Chỉ nhận vào chuỗi OTP + hạn; icon tái sử dụng ic_cart để không thêm tài nguyên.
+     *
+     * @param context      Context
+     * @param otp          Mã OTP 6 chữ số (ví dụ "123456")
+     * @param expiresAtMs  Epoch millis hết hạn (ví dụ now + 5 phút)
+     * @param identifier   Email/Phone để hiển thị thêm (có thể null)
+     */
+    public static void showOtpNotification(Context context, String otp, long expiresAtMs, String identifier) {
+        // đảm bảo kênh OTP tồn tại
+        createOtpChannelIfNeeded(context);
+
+        // Tạo nội dung hiển thị
+        String title = "OTP code verification";
+        String idText = (identifier == null || identifier.isEmpty()) ? "" : (" (" + identifier + ")");
+        String content = "Your OTP: " + otp + idText;
+        String bigText = "Use this code to verify your registration.\n"
+                + "OTP: " + otp + "\n"
+                + "Expires soon.";
+
+        // (Không mở Activity khi bấm — test đơn giản)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, OTP_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cart) // dùng icon có sẵn để tránh thêm resource
+                .setContentTitle(title)
+                .setContentText(content)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(bigText)
+                        .setBigContentTitle(title)
+                        .setSummaryText("CoffeStore"))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) {
+            nm.notify(OTP_NOTIFICATION_ID, builder.build());
+        }
+    }
+
+    /**
+     * Hủy thông báo OTP (nếu cần).
+     */
+    public static void cancelOtpNotification(Context context) {
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) {
+            nm.cancel(OTP_NOTIFICATION_ID);
+        }
+    }
+}
